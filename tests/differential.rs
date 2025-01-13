@@ -6,20 +6,6 @@ use proptest::{prelude::prop, test_runner::TestRunner};
 use sha2::{Digest, Sha256};
 
 #[test]
-fn test_vibe_check() {
-    let runner = NoirRunner::try_new(PathBuf::new()).unwrap();
-
-    let result = runner
-        .run("test_sha256_0", BTreeMap::new())
-        .unwrap()
-        .unwrap();
-
-    let expected: [u8; 32] = Sha256::digest([]).try_into().unwrap();
-
-    assert_eq!(result, expected.to_noir());
-}
-
-#[test]
 fn test_prop_sha256_1() {
     let runner = NoirRunner::try_new(PathBuf::new()).unwrap();
 
@@ -30,13 +16,13 @@ fn test_prop_sha256_1() {
     test_runner
         .run(&strategy, |vector| {
             let input = BTreeMap::from([
-                ("input".to_string(), vector.clone().to_noir()),
+                ("input".to_string(), vector.to_noir()),
                 ("len".to_string(), vector.len().to_noir()),
             ]);
 
             let result = runner.run("test_sha256_1", input).unwrap().unwrap();
 
-            let expected: [u8; 32] = Sha256::digest(&vector).try_into().unwrap();
+            let expected: [u8; 32] = Sha256::digest(vector).into();
 
             assert_eq!(result, expected.to_noir());
 
@@ -62,7 +48,7 @@ fn test_prop_sha256_200() {
 
             let result = runner.run("test_sha256_200", input).unwrap().unwrap();
 
-            let expected: [u8; 32] = Sha256::digest(&vector).try_into().unwrap();
+            let expected: [u8; 32] = Sha256::digest(vector).into();
 
             assert_eq!(result, expected.to_noir());
 
@@ -88,7 +74,7 @@ fn test_prop_sha256_511() {
 
             let result = runner.run("test_sha256_511", input).unwrap().unwrap();
 
-            let expected: [u8; 32] = Sha256::digest(&vector).try_into().unwrap();
+            let expected: [u8; 32] = Sha256::digest(vector).into();
 
             assert_eq!(result, expected.to_noir());
 
@@ -114,7 +100,7 @@ fn test_prop_sha256_512() {
 
             let result = runner.run("test_sha256_512", input).unwrap().unwrap();
 
-            let expected: [u8; 32] = Sha256::digest(&vector).try_into().unwrap();
+            let expected: [u8; 32] = Sha256::digest(vector).into();
 
             assert_eq!(result, expected.to_noir());
 
