@@ -51,7 +51,6 @@ jobs:
         run: nargo test
 
   rust-equivalence-tests:
-    needs: [noir-version-list]
     name: Test for equivalence against Rust impl
     runs-on: ubuntu-latest
     steps:
