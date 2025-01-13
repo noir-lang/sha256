@@ -61,6 +61,9 @@ jobs:
       - name: Run Noir tests
         run: nargo test
 
+      - name: Generate fuzz test programs
+        run: nargo export
+
       - name: Run Cargo tests
         run: cargo test
 
