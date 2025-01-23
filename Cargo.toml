@@ -6,4 +6,4 @@ edition = "2021"
 [dev-dependencies]
 sha2 = { version = "0.10.6", features = ["compress"] }
 proptest = "1.2.0"
-noir-runner = { git = "https://github.com/jtriley-eth/noir-runner", branch = "main" }
+noir-runner = { git = "https://github.com/noir-lang/noir-runner", branch = "main" }
