@@ -49,13 +49,9 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
                 msg_block = new_msg_block;
             }
 
-            if !is_unconstrained() {
-                // Verify the block we are compressing was appropriately constructed
-                let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
-                if msg_start < message_size {
-                    msg_byte_ptr = new_msg_byte_ptr;
-                }
-            } else if msg_start < message_size {
+            // Verify the block we are compressing was appropriately constructed
+            let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
+            if msg_start < message_size {
                 msg_byte_ptr = new_msg_byte_ptr;
             }
 
@@ -79,14 +75,10 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
                 msg_block = new_msg_block;
             }
 
-            if !is_unconstrained() {
-                let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
-                if msg_start < message_size {
-                    msg_byte_ptr = new_msg_byte_ptr;
-                    verify_msg_block_padding(msg_block, msg_byte_ptr);
-                }
-            } else if msg_start < message_size {
+            let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
+            if msg_start < message_size {
                 msg_byte_ptr = new_msg_byte_ptr;
+                verify_msg_block_padding(msg_block, msg_byte_ptr);
             }
         }
 
@@ -116,9 +108,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
 
         msg_block = unsafe { attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size) };
 
-        if !is_unconstrained() {
-            verify_msg_len(msg_block, last_block, msg_byte_ptr, message_size);
-        }
+        verify_msg_len(msg_block, last_block, msg_byte_ptr, message_size);
 
         hash_final_block(msg_block, h)
     }
@@ -162,12 +152,11 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HA
     );
 
     // If we don't have room to write the size, compress the block and reset it.
-    msg_byte_ptr = if msg_byte_ptr >= MSG_SIZE_PTR {
-        h = sha256_compression(msg_block, h);
+    let (h, mut msg_byte_ptr): (STATE, u32) = if msg_byte_ptr >= MSG_SIZE_PTR {
         // `attach_len_to_msg_block` will zero out everything after the `msg_byte_ptr`.
-        0
+        (sha256_compression(msg_block, h), 0)
     } else {
-        msg_byte_ptr + 1
+        (h, msg_byte_ptr + 1)
     };
     msg_block = attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size);
 
