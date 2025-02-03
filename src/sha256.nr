@@ -29,7 +29,8 @@ pub fn digest<let N: u32>(msg: [u8; N]) -> HASH {
 // Variable size SHA-256 hash
 pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
     if std::runtime::is_unconstrained() {
-        __sha256_var(msg, message_size)
+        /// Safety: SHA256 is running as an unconstrained function.
+        unsafe {__sha256_var(msg, message_size)}
     } else {
         let message_size = message_size as u32;
         let num_blocks = N / BLOCK_SIZE;
