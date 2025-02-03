@@ -29,7 +29,9 @@ pub fn digest<let N: u32>(msg: [u8; N]) -> HASH {
 pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
     if std::runtime::is_unconstrained() {
         /// Safety: SHA256 is running as an unconstrained function.
-        unsafe {__sha256_var(msg, message_size)}
+        unsafe {
+            __sha256_var(msg, message_size)
+        }
     } else {
         let message_size = message_size as u32;
         let num_blocks = N / BLOCK_SIZE;
@@ -539,8 +541,8 @@ mod tests {
     #[test]
     fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
         let message_size = message_size % 100;
-        let unconstrained_sha = unsafe { __sha256_var(msg, message_size) };
-        let sha = sha256::sha256_var(msg, message_size);
+        let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size) };
+        let sha = super::sha256_var(msg, message_size);
         assert_eq(sha, unconstrained_sha);
     }
 }
