@@ -1,7 +1,8 @@
 use super::{
-    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, INT_BLOCK, make_item,
+    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, make_item,
     set_item_byte_then_zeros, set_item_zeros, sha256, sha256_var,
 };
+use super::constants::INT_BLOCK;
 
 #[export]
 fn test_sha256_1(input: [u8; 1], len: u64) -> [u8; 32] {

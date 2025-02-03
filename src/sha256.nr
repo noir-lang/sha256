@@ -1,50 +1,16 @@
 use std::hash::sha256_compression;
 use std::runtime::is_unconstrained;
 
+use constants::{
+    BLOCK_BYTE_PTR, BLOCK_SIZE, HASH, INITIAL_STATE, INT_BLOCK, INT_BLOCK_SIZE, INT_SIZE,
+    INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
+};
+
+mod constants;
 mod tests;
 
 // Implementation of SHA-256 mapping a byte array of variable length to
 // 32 bytes.
-
-// A message block is up to 64 bytes taken from the input.
-global BLOCK_SIZE: u32 = 64;
-
-// The first index in the block where the 8 byte message size will be written.
-global MSG_SIZE_PTR: u32 = 56;
-
-// Size of the message block when packed as 4-byte integer array.
-global INT_BLOCK_SIZE: u32 = 16;
-
-// A `u32` integer consists of 4 bytes.
-global INT_SIZE: u32 = 4;
-
-// Index of the integer in the `INT_BLOCK` where the length is written.
-global INT_SIZE_PTR: u32 = MSG_SIZE_PTR / INT_SIZE;
-
-// Magic numbers for bit shifting.
-// Works with actual bit shifting as well as the compiler turns them into * and /
-// but circuit execution appears to be 10% faster this way.
-global TWO_POW_8: u32 = 256;
-global TWO_POW_16: u32 = TWO_POW_8 * 256;
-global TWO_POW_24: u32 = TWO_POW_16 * 256;
-global TWO_POW_32: u64 = TWO_POW_24 as u64 * 256;
-
-// Index of a byte in a 64 byte block; ie. 0..=63
-type BLOCK_BYTE_PTR = u32;
-
-// The foreign function to compress blocks works on 16 pieces of 4-byte integers, instead of 64 bytes.
-type INT_BLOCK = [u32; INT_BLOCK_SIZE];
-
-// A message block is a slice of the original message of a fixed size,
-// potentially padded with zeros, with neighbouring 4 bytes packed into integers.
-type MSG_BLOCK = INT_BLOCK;
-
-// The hash is 32 bytes.
-type HASH = [u8; 32];
-
-// The state accumulates the blocks.
-// Its overall size is the same as the `HASH`.
-type STATE = [u32; 8];
 
 // Deprecated in favour of `sha256_var`
 // docs:start:sha256
@@ -62,71 +28,127 @@ pub fn digest<let N: u32>(msg: [u8; N]) -> HASH {
 
 // Variable size SHA-256 hash
 pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
-    let message_size = message_size as u32;
-    let num_blocks = N / BLOCK_SIZE;
-    let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
-    // Intermediate hash, starting with the canonical initial value
-    let mut h: STATE = [
-        1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635,
-        1541459225,
-    ];
-    // Pointer into msg_block on a 64 byte scale
-    let mut msg_byte_ptr = 0;
-    for i in 0..num_blocks {
-        let msg_start = BLOCK_SIZE * i;
-        let (new_msg_block, new_msg_byte_ptr) =
-            unsafe { build_msg_block(msg, message_size, msg_start) };
+    if std::runtime::is_unconstrained() {
+        __sha256_var(msg, message_size)
+    } else {
+        let message_size = message_size as u32;
+        let num_blocks = N / BLOCK_SIZE;
+        let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
+        // Intermediate hash, starting with the canonical initial value
+        let mut h: STATE = INITIAL_STATE;
+        // Pointer into msg_block on a 64 byte scale
+        let mut msg_byte_ptr = 0;
+        for i in 0..num_blocks {
+            let msg_start = BLOCK_SIZE * i;
+            let (new_msg_block, new_msg_byte_ptr) =
+                unsafe { build_msg_block(msg, message_size, msg_start) };
 
-        if msg_start < message_size {
-            msg_block = new_msg_block;
-        }
-
-        if !is_unconstrained() {
-            // Verify the block we are compressing was appropriately constructed
-            let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
             if msg_start < message_size {
+                msg_block = new_msg_block;
+            }
+
+            if !is_unconstrained() {
+                // Verify the block we are compressing was appropriately constructed
+                let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
+                if msg_start < message_size {
+                    msg_byte_ptr = new_msg_byte_ptr;
+                }
+            } else if msg_start < message_size {
                 msg_byte_ptr = new_msg_byte_ptr;
             }
-        } else if msg_start < message_size {
-            msg_byte_ptr = new_msg_byte_ptr;
+
+            // If the block is filled, compress it.
+            // An un-filled block is handled after this loop.
+            if (msg_start < message_size) & (msg_byte_ptr == BLOCK_SIZE) {
+                h = sha256_compression(msg_block, h);
+            }
         }
 
-        // If the block is filled, compress it.
-        // An un-filled block is handled after this loop.
-        if (msg_start < message_size) & (msg_byte_ptr == BLOCK_SIZE) {
-            h = sha256_compression(msg_block, h);
+        let modulo = N % BLOCK_SIZE;
+        // Handle setup of the final msg block.
+        // This case is only hit if the msg is less than the block size,
+        // or our message cannot be evenly split into blocks.
+        if modulo != 0 {
+            let msg_start = BLOCK_SIZE * num_blocks;
+            let (new_msg_block, new_msg_byte_ptr) =
+                unsafe { build_msg_block(msg, message_size, msg_start) };
+
+            if msg_start < message_size {
+                msg_block = new_msg_block;
+            }
+
+            if !is_unconstrained() {
+                let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
+                if msg_start < message_size {
+                    msg_byte_ptr = new_msg_byte_ptr;
+                    verify_msg_block_padding(msg_block, msg_byte_ptr);
+                }
+            } else if msg_start < message_size {
+                msg_byte_ptr = new_msg_byte_ptr;
+            }
         }
+
+        // If we had modulo == 0 then it means the last block was full,
+        // and we can reset the pointer to zero to overwrite it.
+        if msg_byte_ptr == BLOCK_SIZE {
+            msg_byte_ptr = 0;
+        }
+
+        // Pad the rest such that we have a [u32; 2] block at the end representing the length
+        // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
+        // Here we rely on the fact that everything beyond the available input is set to 0.
+        msg_block = update_block_item(
+            msg_block,
+            msg_byte_ptr,
+            |msg_item| set_item_byte_then_zeros(msg_item, msg_byte_ptr, 1 << 7),
+        );
+        msg_byte_ptr = msg_byte_ptr + 1;
+        let last_block = msg_block;
+
+        // If we don't have room to write the size, compress the block and reset it.
+        if msg_byte_ptr > MSG_SIZE_PTR {
+            h = sha256_compression(msg_block, h);
+            // `attach_len_to_msg_block` will zero out everything after the `msg_byte_ptr`.
+            msg_byte_ptr = 0;
+        }
+
+        msg_block = unsafe { attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size) };
+
+        if !is_unconstrained() {
+            verify_msg_len(msg_block, last_block, msg_byte_ptr, message_size);
+        }
+
+        hash_final_block(msg_block, h)
+    }
+}
+
+// Variable size SHA-256 hash
+unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
+    let message_size = message_size as u32;
+    assert(message_size <= N);
+    let num_full_blocks = message_size / BLOCK_SIZE;
+    // Intermediate hash, starting with the canonical initial value
+    let mut h: STATE = INITIAL_STATE;
+    // Pointer into msg_block on a 64 byte scale
+    for i in 0..num_full_blocks {
+        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        h = sha256_compression(msg_block, h);
     }
 
-    let modulo = N % BLOCK_SIZE;
     // Handle setup of the final msg block.
     // This case is only hit if the msg is less than the block size,
     // or our message cannot be evenly split into blocks.
-    if modulo != 0 {
-        let msg_start = BLOCK_SIZE * num_blocks;
-        let (new_msg_block, new_msg_byte_ptr) =
-            unsafe { build_msg_block(msg, message_size, msg_start) };
+    let modulo = message_size % BLOCK_SIZE;
+    let (mut msg_block, mut msg_byte_ptr): (INT_BLOCK, u32) = if modulo != 0 {
+        let msg_start = BLOCK_SIZE * num_full_blocks;
+        let (new_msg_block, new_msg_byte_ptr) = build_msg_block(msg, message_size, msg_start);
 
-        if msg_start < message_size {
-            msg_block = new_msg_block;
-        }
-
-        if !is_unconstrained() {
-            let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
-            if msg_start < message_size {
-                msg_byte_ptr = new_msg_byte_ptr;
-                verify_msg_block_padding(msg_block, msg_byte_ptr);
-            }
-        } else if msg_start < message_size {
-            msg_byte_ptr = new_msg_byte_ptr;
-        }
-    }
-
-    // If we had modulo == 0 then it means the last block was full,
-    // and we can reset the pointer to zero to overwrite it.
-    if msg_byte_ptr == BLOCK_SIZE {
-        msg_byte_ptr = 0;
-    }
+        (new_msg_block, new_msg_byte_ptr)
+    } else {
+        // If we had modulo == 0 then it means the last block was full,
+        // and we can reset the pointer to zero to overwrite it.
+        ([0; INT_BLOCK_SIZE], 0)
+    };
 
     // Pad the rest such that we have a [u32; 2] block at the end representing the length
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
@@ -136,21 +158,16 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
         msg_byte_ptr,
         |msg_item| set_item_byte_then_zeros(msg_item, msg_byte_ptr, 1 << 7),
     );
-    msg_byte_ptr = msg_byte_ptr + 1;
-    let last_block = msg_block;
 
     // If we don't have room to write the size, compress the block and reset it.
-    if msg_byte_ptr > MSG_SIZE_PTR {
+    msg_byte_ptr = if msg_byte_ptr >= MSG_SIZE_PTR {
         h = sha256_compression(msg_block, h);
         // `attach_len_to_msg_block` will zero out everything after the `msg_byte_ptr`.
-        msg_byte_ptr = 0;
-    }
-
-    msg_block = unsafe { attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size) };
-
-    if !is_unconstrained() {
-        verify_msg_len(msg_block, last_block, msg_byte_ptr, message_size);
-    }
+        0
+    } else {
+        msg_byte_ptr + 1
+    };
+    msg_block = attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size);
 
     hash_final_block(msg_block, h)
 }
@@ -517,3 +534,13 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
     out_h
 }
 
+mod tests {
+
+    #[test]
+    fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
+        let message_size = message_size % 100;
+        let unconstrained_sha = unsafe { __sha256_var(msg, message_size) };
+        let sha = sha256::sha256_var(msg, message_size);
+        assert_eq(sha, unconstrained_sha);
+    }
+}
