@@ -189,7 +189,6 @@ unconstrained fn build_msg_block<let N: u32>(
     for i in 0..int_input {
         let mut msg_item: u32 = 0;
         // Always construct the integer as 4 bytes, even if it means going beyond the input.
-        // k is always less
         for j in 0..INT_SIZE {
             let k = i * INT_SIZE + j;
             let msg_byte = if k < block_input {
