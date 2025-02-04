@@ -22,7 +22,8 @@ jobs:
       - name: Install bb
         run: |
           npm install -g bbup
-          bbup -nv 0.36.0
+          bbup -nv 0.36.
+          apt install -y libc++-dev
 
       - name: Build Noir benchmark programs
         run: nargo export
