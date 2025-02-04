@@ -27,19 +27,21 @@ pub fn digest<let N: u32>(msg: [u8; N]) -> HASH {
 
 // Variable size SHA-256 hash
 pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
+    let message_size = message_size as u32;
+    assert(message_size <= N);
+
     if std::runtime::is_unconstrained() {
         /// Safety: SHA256 is running as an unconstrained function.
         unsafe {
             __sha256_var(msg, message_size)
         }
     } else {
-        let message_size = message_size as u32;
-        let num_blocks = N / BLOCK_SIZE;
         let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
         // Intermediate hash, starting with the canonical initial value
         let mut h: STATE = INITIAL_STATE;
         // Pointer into msg_block on a 64 byte scale
         let mut msg_byte_ptr = 0;
+        let num_blocks = N / BLOCK_SIZE;
         for i in 0..num_blocks {
             let msg_start = BLOCK_SIZE * i;
             let (new_msg_block, new_msg_byte_ptr) =
@@ -91,11 +93,9 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
         // Pad the rest such that we have a [u32; 2] block at the end representing the length
         // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
         // Here we rely on the fact that everything beyond the available input is set to 0.
-        msg_block = update_block_item(
-            msg_block,
-            msg_byte_ptr,
-            |msg_item| set_item_byte_then_zeros(msg_item, msg_byte_ptr, 1 << 7),
-        );
+        let index = msg_byte_ptr / INT_SIZE;
+        msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1<<7);
+
         msg_byte_ptr = msg_byte_ptr + 1;
         let last_block = msg_block;
 
@@ -115,9 +115,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
 }
 
 // Variable size SHA-256 hash
-unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
-    let message_size = message_size as u32;
-    assert(message_size <= N);
+unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HASH {
     let num_full_blocks = message_size / BLOCK_SIZE;
     // Intermediate hash, starting with the canonical initial value
     let mut h: STATE = INITIAL_STATE;
@@ -145,11 +143,8 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HA
     // Pad the rest such that we have a [u32; 2] block at the end representing the length
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
     // Here we rely on the fact that everything beyond the available input is set to 0.
-    msg_block = update_block_item(
-        msg_block,
-        msg_byte_ptr,
-        |msg_item| set_item_byte_then_zeros(msg_item, msg_byte_ptr, 1 << 7),
-    );
+    let index = msg_byte_ptr / INT_SIZE;
+    msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1<<7);
 
     // If we don't have room to write the size, compress the block and reset it.
     let (h, mut msg_byte_ptr): (STATE, u32) = if msg_byte_ptr >= MSG_SIZE_PTR {
@@ -340,17 +335,6 @@ fn verify_msg_block_equals_last(
     }
 }
 
-// Apply a function on the block item which the pointer indicates.
-fn update_block_item<Env>(
-    mut msg_block: MSG_BLOCK,
-    msg_byte_ptr: BLOCK_BYTE_PTR,
-    f: fn[Env](u32) -> u32,
-) -> MSG_BLOCK {
-    let i = msg_byte_ptr / INT_SIZE;
-    msg_block[i] = f(msg_block[i]);
-    msg_block
-}
-
 // Set the rightmost `zeros` number of bytes to 0.
 fn set_item_zeros(item: u32, zeros: u8) -> u32 {
     lshift8(rshift8(item, zeros), zeros)
@@ -530,7 +514,7 @@ mod tests {
     #[test]
     fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
         let message_size = message_size % 100;
-        let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size) };
+        let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size as u32) };
         let sha = super::sha256_var(msg, message_size);
         assert_eq(sha, unconstrained_sha);
     }
