@@ -94,7 +94,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
         // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
         // Here we rely on the fact that everything beyond the available input is set to 0.
         let index = msg_byte_ptr / INT_SIZE;
-        msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1<<7);
+        msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
 
         msg_byte_ptr = msg_byte_ptr + 1;
         let last_block = msg_block;
@@ -144,7 +144,7 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HA
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
     // Here we rely on the fact that everything beyond the available input is set to 0.
     let index = msg_byte_ptr / INT_SIZE;
-    msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1<<7);
+    msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
 
     // If we don't have room to write the size, compress the block and reset it.
     let (h, mut msg_byte_ptr): (STATE, u32) = if msg_byte_ptr >= MSG_SIZE_PTR {
