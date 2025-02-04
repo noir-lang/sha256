@@ -192,7 +192,11 @@ unconstrained fn build_msg_block<let N: u32>(
         // k is always less
         for j in 0..INT_SIZE {
             let k = i * INT_SIZE + j;
-            let msg_byte = msg[msg_start + k];
+            let msg_byte = if k < block_input {
+                msg[msg_start + k]
+            } else {
+                0
+            };
             msg_item = lshift8(msg_item, 1) + msg_byte as u32;
         }
         msg_block[i] = msg_item;
