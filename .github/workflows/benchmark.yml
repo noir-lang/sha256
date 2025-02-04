@@ -23,7 +23,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
           source ~/.bashrc
-          bbup -nv 0.36.
+          bbup -nv 0.36.0
           apt install -y libc++-dev
 
       - name: Build Noir benchmark programs
