@@ -32,7 +32,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
     assert(message_size <= N);
 
     if std::runtime::is_unconstrained() {
-        // SAfety: SHA256 is running as an unconstrained function.
+        // Safety: SHA256 is running as an unconstrained function.
         unsafe {
             __sha256_var(msg, message_size)
         }
