@@ -24,7 +24,7 @@ jobs:
           curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/master/barretenberg/bbup/install | bash
           echo "$HOME/.bb/" >> $GITHUB_PATH
           ~/.bb/bbup -nv 0.36.0
-          apt install -y libc++-dev
+          sudo apt install -y libc++-dev
 
       - name: Build Noir benchmark programs
         run: nargo export
