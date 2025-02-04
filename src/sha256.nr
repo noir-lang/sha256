@@ -7,6 +7,7 @@ use constants::{
 };
 
 mod constants;
+mod tests;
 
 // Implementation of SHA-256 mapping a byte array of variable length to
 // 32 bytes.
@@ -509,7 +510,7 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
     out_h
 }
 
-mod tests {
+mod equivalence_test {
 
     #[test]
     fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
