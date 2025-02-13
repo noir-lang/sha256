@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/noir-lang/sha256/compare/v0.1.1...v0.1.2) (2025-02-13)
+
+
+### Features
+
+* **performance:** Always inline certain small methods ([#13](https://github.com/noir-lang/sha256/issues/13)) ([96c43cc](https://github.com/noir-lang/sha256/commit/96c43ccf8fd92502e0e83836ecde0f89e2b09799))
+
 ## [0.1.1](https://github.com/noir-lang/sha256/compare/v0.1.0...v0.1.1) (2025-02-04)
 
 
