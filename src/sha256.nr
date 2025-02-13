@@ -6,7 +6,7 @@ use constants::{
     INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
 };
 
-pub(crate) mod constants;
+mod constants;
 mod tests;
 
 // Implementation of SHA-256 mapping a byte array of variable length to
