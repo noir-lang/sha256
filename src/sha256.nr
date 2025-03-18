@@ -526,7 +526,9 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
  */
 pub fn partial_sha256_var_start<let N: u32>(msg: [u8; N], message_size: u32) -> [u32; 8] {
     if std::runtime::is_unconstrained() {
-        [0; 8]
+        unsafe {
+            __sha_partial_var_start(msg, message_size)
+        }
     } else {
         // Intermediate hash, starting with the canonical initial value
         let mut h: STATE = INITIAL_STATE;
@@ -576,7 +578,9 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
 ) -> [u32; 8] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
     if std::runtime::is_unconstrained() {
-        [0; 8]
+        unsafe {
+            __sha_partial_var_interstitial(h, msg, message_size)
+        }
     } else {
         let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
         // Pointer into msg_block on a 64 byte scale
@@ -626,7 +630,9 @@ pub fn partial_sha256_var_end<let N: u32>(
 ) -> [u8; 32] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
     if std::runtime::is_unconstrained() {
-        [0; 32]
+        unsafe {
+            __sha_partial_var_end(h, msg, message_size, real_message_size)
+        }
     } else {
         let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
         // Pointer into msg_block on a 64 byte scale
