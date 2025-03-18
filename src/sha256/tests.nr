@@ -384,11 +384,8 @@ fn test_partial_hash_interstitial_var() {
         data2[i] = DATA[128 + i];
     }
     let correct_hash = sha256_var(DATA, DATA.len() as u64);
-    println(f"correct_hash: {correct_hash}");
     let pre_hash = partial_sha256_var_start(data0, 64, 256);
-    // println(f"pre_hash: {pre_hash}");
     let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64, 192);
-    // println(f"interstitial_hash: {interstitial_hash}");
     let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), DATA.len());
     assert_eq(hash, correct_hash);
 }
