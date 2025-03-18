@@ -598,7 +598,6 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
             }
 
             // Verify the block we are compressing was appropriately constructed
-
             let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
             if msg_start < message_size {
                 msg_byte_ptr = new_msg_byte_ptr;
@@ -650,7 +649,6 @@ pub fn partial_sha256_var_end<let N: u32>(
             }
 
             // Verify the block we are compressing was appropriately constructed
-
             let new_msg_byte_ptr = verify_msg_block(msg, message_size, msg_block, msg_start);
             if msg_start < message_size {
                 msg_byte_ptr = new_msg_byte_ptr;
