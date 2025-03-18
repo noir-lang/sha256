@@ -350,7 +350,7 @@ fn test_partial_hash() {
     for i in 0..data1.len() {
         data1[i] = DATA[data0.len() + i];
     }
-    let state = partial_sha256_var_start(data0, 128, 192);
+    let state = partial_sha256_var_start(data0, 128);
     let hash = partial_sha256_var_end(state, data1, data1.len(), DATA.len());
     let correct_hash = sha256_var(DATA, DATA.len() as u64);
     assert_eq(hash, correct_hash);
@@ -366,8 +366,8 @@ fn test_partial_hash_interstitial() {
         data1[i] = DATA[64 + i];
         data2[i] = DATA[128 + i];
     }
-    let pre_hash = partial_sha256_var_start(data0, 64, 192);
-    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, data1.len(), 128);
+    let pre_hash = partial_sha256_var_start(data0, 64);
+    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, data1.len());
     let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), DATA.len());
     let correct_hash = sha256_var(DATA, DATA.len() as u64);
     assert_eq(hash, correct_hash);
@@ -384,8 +384,8 @@ fn test_partial_hash_interstitial_var() {
         data2[i] = DATA[128 + i];
     }
     let correct_hash = sha256_var(DATA, DATA.len() as u64);
-    let pre_hash = partial_sha256_var_start(data0, 64, 256);
-    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64, 192);
+    let pre_hash = partial_sha256_var_start(data0, 64);
+    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
     let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), DATA.len());
     assert_eq(hash, correct_hash);
 }

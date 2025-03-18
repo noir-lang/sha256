@@ -513,7 +513,6 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
     out_h
 }
 
-// https://github.com/noir-lang/noir/blob/76eec710ff73e5e45fdddcd41ae2cd74e879cfa5/noir_stdlib/src/hash/sha256.nr#L86-L116
 /**
  * Partially computes a SHA256 hash of a message but does not finalize
  * @notice can be used for post-partial hashing where client proves part of hash and relies on server to finish
@@ -525,11 +524,7 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
  * @param msg: the preimage to begin hashing
  * @return the intermediate hash state
  */
-pub fn partial_sha256_var_start<let N: u32>(
-    msg: [u8; N],
-    message_size: u32,
-    real_message_size: u32,
-) -> [u32; 8] {
+pub fn partial_sha256_var_start<let N: u32>(msg: [u8; N], message_size: u32) -> [u32; 8] {
     if std::runtime::is_unconstrained() {
         [0; 8]
     } else {
@@ -578,7 +573,6 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
     mut h: [u32; 8],
     msg: [u8; N],
     message_size: u32,
-    real_message_size: u32,
 ) -> [u32; 8] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
     if std::runtime::is_unconstrained() {
@@ -613,7 +607,6 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
     }
 }
 
-// https://github.com/noir-lang/noir/blob/76eec710ff73e5e45fdddcd41ae2cd74e879cfa5/noir_stdlib/src/hash/sha256.nr#L85
 /**
  * Given some state of a partially computed sha256 hash and remaining preimage, complete the hash
  * @notice used for traditional partial hashing
@@ -708,6 +701,82 @@ pub fn partial_sha256_var_end<let N: u32>(
         verify_msg_len(msg_block, last_block, msg_byte_ptr, real_message_size);
         hash_final_block(msg_block, h)
     }
+}
+
+pub unconstrained fn __sha_partial_var_start<let N: u32>(
+    msg: [u8; N],
+    message_size: u32,
+) -> [u32; 8] {
+    let num_full_blocks = message_size / BLOCK_SIZE;
+    // Intermediate hash, starting with the canonical initial value
+    let mut h: STATE = INITIAL_STATE;
+    // Pointer into msg_block on a 64 byte scale
+    for i in 0..num_full_blocks {
+        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        h = sha256_compression(msg_block, h);
+    }
+    h
+}
+
+pub unconstrained fn __sha_partial_var_interstitial<let N: u32>(
+    mut h: [u32; 8],
+    msg: [u8; N],
+    message_size: u32,
+) -> [u32; 8] {
+    let num_full_blocks = message_size / BLOCK_SIZE;
+    // Intermediate hash, starting with the canonical initial value
+    // Pointer into msg_block on a 64 byte scale
+    for i in 0..num_full_blocks {
+        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        h = sha256_compression(msg_block, h);
+    }
+    h
+}
+
+pub unconstrained fn __sha_partial_var_end<let N: u32>(
+    mut h: [u32; 8],
+    msg: [u8; N],
+    message_size: u32,
+    real_message_size: u32,
+) -> [u8; 32] {
+    let num_full_blocks = message_size / BLOCK_SIZE;
+    // Pointer into msg_block on a 64 byte scale
+    for i in 0..num_full_blocks {
+        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        h = sha256_compression(msg_block, h);
+    }
+
+    // Handle setup of the final msg block.
+    // This case is only hit if the msg is less than the block size,
+    // or our message cannot be evenly split into blocks.
+    let modulo = message_size % BLOCK_SIZE;
+    let (mut msg_block, mut msg_byte_ptr): (INT_BLOCK, u32) = if modulo != 0 {
+        let msg_start = BLOCK_SIZE * num_full_blocks;
+        let (new_msg_block, new_msg_byte_ptr) = build_msg_block(msg, message_size, msg_start);
+
+        (new_msg_block, new_msg_byte_ptr)
+    } else {
+        // If we had modulo == 0 then it means the last block was full,
+        // and we can reset the pointer to zero to overwrite it.
+        ([0; INT_BLOCK_SIZE], 0)
+    };
+
+    // Pad the rest such that we have a [u32; 2] block at the end representing the length
+    // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
+    // Here we rely on the fact that everything beyond the available input is set to 0.
+    let index = msg_byte_ptr / INT_SIZE;
+    msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
+
+    // If we don't have room to write the size, compress the block and reset it.
+    let (h, mut msg_byte_ptr): (STATE, u32) = if msg_byte_ptr >= MSG_SIZE_PTR {
+        // `attach_len_to_msg_block` will zero out everything after the `msg_byte_ptr`.
+        (sha256_compression(msg_block, h), 0)
+    } else {
+        (h, msg_byte_ptr + 1)
+    };
+    msg_block = attach_len_to_msg_block(msg_block, msg_byte_ptr, real_message_size);
+
+    hash_final_block(msg_block, h)
 }
 
 mod equivalence_test {
