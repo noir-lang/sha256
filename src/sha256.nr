@@ -6,7 +6,7 @@ use constants::{
     INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
 };
 
-mod constants;
+pub(crate) mod constants;
 mod tests;
 
 // Implementation of SHA-256 mapping a byte array of variable length to
@@ -517,6 +517,7 @@ mod equivalence_test {
     #[test]
     fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
         let message_size = message_size % 100;
+        // Safety: test function
         let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size as u32) };
         let sha = super::sha256_var(msg, message_size);
         assert_eq(sha, unconstrained_sha);

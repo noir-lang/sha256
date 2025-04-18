@@ -302,6 +302,7 @@ fn test_build_msg_block_start_0() {
         115, 46, 48,
     ];
     assert_eq(input.len(), 22);
+    // Safety: test function
     let (msg_block, msg_byte_ptr) = unsafe { build_msg_block(input, input.len(), 0) };
     assert_eq(msg_byte_ptr, input.len());
     assert_eq(msg_block[0], make_item(input[0], input[1], input[2], input[3]));
@@ -319,6 +320,7 @@ fn test_build_msg_block_start_1() {
         110, 59, 32, 99, 104, 97, 114, 115, 101, 116,
     ];
     assert_eq(input.len(), 68);
+    // Safety: test function
     let (msg_block, msg_byte_ptr) = unsafe { build_msg_block(input, input.len(), 64) };
     assert_eq(msg_byte_ptr, 4);
     assert_eq(msg_block[0], make_item(input[64], input[65], input[66], input[67]));
@@ -332,6 +334,7 @@ fn test_attach_len_to_msg_block() {
         1919905082, 1131376244, 1701737517, 1417244773, 978151789, 1697470053, 1920166255,
         1849316213, 1651139939,
     ];
+    // Safety: test function
     let msg_block = unsafe { attach_len_to_msg_block(input, 1, 448) };
     assert_eq(msg_block[0], ((1 << 7) as u32) * 256 * 256 * 256);
     assert_eq(msg_block[1], 0);
