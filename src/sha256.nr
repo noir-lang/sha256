@@ -133,7 +133,6 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HA
     let (mut msg_block, mut msg_byte_ptr): (INT_BLOCK, u32) = if modulo != 0 {
         let msg_start = BLOCK_SIZE * num_full_blocks;
         let (new_msg_block, new_msg_byte_ptr) = build_msg_block(msg, message_size, msg_start);
-
         (new_msg_block, new_msg_byte_ptr)
     } else {
         // If we had modulo == 0 then it means the last block was full,
@@ -181,10 +180,7 @@ unconstrained fn build_msg_block<let N: u32>(
 
     // Figure out the number of items in the int array that we have to pack.
     // e.g. if the input is [0,1,2,3,4,5] then we need to pack it as 2 items: [0123, 4500]
-    let mut int_input = block_input / INT_SIZE;
-    if block_input % INT_SIZE != 0 {
-        int_input = int_input + 1;
-    };
+    let int_input = (block_input + INT_SIZE - 1) / INT_SIZE;
 
     for i in 0..int_input {
         let mut msg_item: u32 = 0;
@@ -412,6 +408,7 @@ fn lshift8(item: u32, shifts: u8) -> u32 {
 // Shift by 8 bits to the right between 0 and 4 times.
 // Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
 // otherwise divides by 256.
+#[inline_always]
 fn rshift8(item: u32, shifts: u8) -> u32 {
     if is_unconstrained() {
         item >> (8 * shifts)
@@ -458,15 +455,16 @@ unconstrained fn attach_len_to_msg_block(
     // Set the last two 4 byte ints as the first/second half of the 8 bytes of the length.
     let len = 8 * message_size;
     let len_bytes: [u8; 8] = (len as Field).to_be_bytes();
-    for i in 0..=1 {
-        let shift = i * 4;
-        msg_block[INT_SIZE_PTR + i] = make_item(
-            len_bytes[shift],
-            len_bytes[shift + 1],
-            len_bytes[shift + 2],
-            len_bytes[shift + 3],
-        );
-    }
+    msg_block[INT_SIZE_PTR] = (len_bytes[0] as u32) << 24
+        | (len_bytes[1] as u32) << 16
+        | (len_bytes[2] as u32) << 8
+        | (len_bytes[3] as u32);
+
+    msg_block[INT_SIZE_PTR + 1] = (len_bytes[4] as u32) << 24
+        | (len_bytes[5] as u32) << 16
+        | (len_bytes[6] as u32) << 8
+        | (len_bytes[7] as u32);
+
     msg_block
 }
 
