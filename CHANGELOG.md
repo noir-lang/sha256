@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/noir-lang/sha256/compare/v0.1.3...v0.1.4) (2025-05-21)
+
+
+### Features
+
+* Integer division simplification ([#19](https://github.com/noir-lang/sha256/issues/19)) ([ab18ee7](https://github.com/noir-lang/sha256/commit/ab18ee7387a361339a4dbbf8fd540e144abd3a5d))
+
 ## [0.1.3](https://github.com/noir-lang/sha256/compare/v0.1.2...v0.1.3) (2025-04-18)
 
 
