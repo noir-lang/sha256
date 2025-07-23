@@ -545,29 +545,6 @@ fn finalize_sha256_blocks<let N: u32>(
 }
 
 /**
- * Partially computes a SHA256 hash of a message but does not finalize
- * @notice can be used for post-partial hashing where client proves part of hash and relies on server to finish
- * 
- *
- * @param N: the length of the message to hash.
- *  --- WARNING: N must be divisible by BLOCK_SIZE such that N % BLOCK_SIZE == 0 
- *      otherwise the remaining bytes will not be inputted when computing the initial hash
- * @param msg: the preimage to begin hashing
- * @return the intermediate hash state
- */
-pub fn partial_sha256_var_start<let N: u32>(msg: [u8; N], message_size: u32) -> [u32; 8] {
-    if std::runtime::is_unconstrained() {
-        unsafe {
-            __sha_partial_var_interstitial(INITIAL_STATE, msg, message_size)
-        }
-    } else {
-        // Intermediate hash, starting with the canonical initial value
-        let (mut h, _, _) = process_full_blocks(msg, message_size, N, INITIAL_STATE);
-        h
-    }
-}
-
-/**
  * Given some state of a partially computed sha256 hash and part of the preimage, continue hashing
  * @notice used for complex/ recursive offloading of post-partial hashing
  *
@@ -622,7 +599,7 @@ pub fn partial_sha256_var_end<let N: u32>(
     }
 }
 
-pub unconstrained fn __sha_partial_var_interstitial<let N: u32>(
+unconstrained fn __sha_partial_var_interstitial<let N: u32>(
     mut h: [u32; 8],
     msg: [u8; N],
     message_size: u32,
@@ -637,7 +614,7 @@ pub unconstrained fn __sha_partial_var_interstitial<let N: u32>(
     h
 }
 
-pub unconstrained fn __sha_partial_var_end<let N: u32>(
+unconstrained fn __sha_partial_var_end<let N: u32>(
     mut h: [u32; 8],
     msg: [u8; N],
     message_size: u32,
