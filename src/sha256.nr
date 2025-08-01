@@ -332,14 +332,14 @@ fn verify_msg_block_equals_last(
 
 // Set the rightmost `zeros` number of bytes to 0.
 #[inline_always]
-fn set_item_zeros(item: u32, zeros: u8) -> u32 {
+fn set_item_zeros(item: u32, zeros: u32) -> u32 {
     lshift8(rshift8(item, zeros), zeros)
 }
 
 // Replace one byte in the item with a value, and set everything after it to zero.
 fn set_item_byte_then_zeros(msg_item: u32, msg_byte_ptr: BLOCK_BYTE_PTR, msg_byte: u8) -> u32 {
     let zeros = INT_SIZE - msg_byte_ptr % INT_SIZE;
-    let zeroed_item = set_item_zeros(msg_item, zeros as u8);
+    let zeroed_item = set_item_zeros(msg_item, zeros);
     let new_item = byte_into_item(msg_byte, msg_byte_ptr);
     zeroed_item + new_item
 }
@@ -349,7 +349,7 @@ fn get_item_byte(mut msg_item: u32, msg_byte_ptr: BLOCK_BYTE_PTR) -> u8 {
     // How many times do we have to shift to the right to get to the position we want?
     let max_shifts = INT_SIZE - 1;
     let shifts = max_shifts - msg_byte_ptr % INT_SIZE;
-    msg_item = rshift8(msg_item, shifts as u8);
+    msg_item = rshift8(msg_item, shifts);
     // At this point the byte we want is in the rightmost position.
     msg_item as u8
 }
@@ -363,7 +363,7 @@ fn byte_into_item(msg_byte: u8, msg_byte_ptr: BLOCK_BYTE_PTR) -> u32 {
     // How many times do we have to shift to the left to get to the position we want?
     let max_shifts = INT_SIZE - 1;
     let shifts = max_shifts - msg_byte_ptr % INT_SIZE;
-    lshift8(msg_item, shifts as u8)
+    lshift8(msg_item, shifts)
 }
 
 // Construct a field out of 4 bytes.
@@ -380,7 +380,7 @@ fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
 // Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
 // otherwise multiplies by 256.
 #[inline_always]
-fn lshift8(item: u32, shifts: u8) -> u32 {
+fn lshift8(item: u32, shifts: u32) -> u32 {
     if is_unconstrained() {
         // Brillig wouldn't shift 0<<4 without overflow.
         if shifts >= 4 {
@@ -409,9 +409,13 @@ fn lshift8(item: u32, shifts: u8) -> u32 {
 // Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
 // otherwise divides by 256.
 #[inline_always]
-fn rshift8(item: u32, shifts: u8) -> u32 {
+fn rshift8(item: u32, shifts: u32) -> u32 {
     if is_unconstrained() {
-        item >> (8 * shifts)
+        if 8 * shifts >= 32 {
+            0
+        } else {
+            item >> (8 * shifts)
+        }
     } else {
         // Division wouldn't work on `Field`.
         if shifts == 0 {
@@ -443,7 +447,7 @@ unconstrained fn attach_len_to_msg_block(
         // Index of the block in which we find the item we need to partially zero.
         let i = msg_byte_ptr / INT_SIZE;
         let zeros = INT_SIZE - modulo;
-        msg_block[i] = set_item_zeros(msg_block[i], zeros as u8);
+        msg_block[i] = set_item_zeros(msg_block[i], zeros);
         msg_byte_ptr = msg_byte_ptr + zeros;
     }
 
