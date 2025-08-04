@@ -3,9 +3,7 @@ use super::{
     partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
     set_item_zeros, sha256, sha256_var,
 };
-use super::constants::INITIAL_STATE;
-use super::constants::INT_BLOCK;
-use super::constants::test_inputs::DATA;
+use super::constants::{INITIAL_STATE, INT_BLOCK, test_inputs::DATA};
 
 #[export]
 fn test_sha256_1(input: [u8; 1], len: u64) -> [u8; 32] {
