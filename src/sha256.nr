@@ -491,7 +491,7 @@ fn verify_msg_len(
         reconstructed_len *= TWO_POW_32 as Field;
         reconstructed_len += msg_block[i] as Field;
     }
-    let len = 8 * message_size as Field;
+    let len = 8 * (message_size as Field);
     assert_eq(reconstructed_len, len);
 }
 
