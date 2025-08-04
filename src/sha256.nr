@@ -484,6 +484,8 @@ fn verify_msg_len(
     verify_msg_block_equals_last(msg_block, last_block, msg_byte_ptr);
 
     // We verify the message length was inserted correctly by reversing the byte decomposition.
+    //
+    // `reconstructed_len` is bounded to be less than 2^64, so we can safely omit overflow checks by using a `Field`.
     let mut reconstructed_len: Field = 0;
     for i in INT_SIZE_PTR..INT_BLOCK_SIZE {
         reconstructed_len *= TWO_POW_32 as Field;
