@@ -6,7 +6,7 @@ use constants::{
     INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
 };
 
-mod constants;
+pub(crate) mod constants;
 mod tests;
 
 // Implementation of SHA-256 mapping a byte array of variable length to
@@ -55,7 +55,6 @@ unconstrained fn finalize_last_sha256_block<let N: u32>(
         let num_full_blocks = message_size / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_full_blocks;
         let (new_msg_block, new_msg_byte_ptr) = build_msg_block(msg, message_size, msg_start);
-
         (new_msg_block, new_msg_byte_ptr)
     } else {
         // If we had modulo == 0 then it means the last block was full,
@@ -154,10 +153,7 @@ unconstrained fn build_msg_block<let N: u32>(
 
     // Figure out the number of items in the int array that we have to pack.
     // e.g. if the input is [0,1,2,3,4,5] then we need to pack it as 2 items: [0123, 4500]
-    let mut int_input = block_input / INT_SIZE;
-    if block_input % INT_SIZE != 0 {
-        int_input = int_input + 1;
-    };
+    let int_input = (block_input + INT_SIZE - 1) / INT_SIZE;
 
     for i in 0..int_input {
         let mut msg_item: u32 = 0;
@@ -385,6 +381,7 @@ fn lshift8(item: u32, shifts: u8) -> u32 {
 // Shift by 8 bits to the right between 0 and 4 times.
 // Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
 // otherwise divides by 256.
+#[inline_always]
 fn rshift8(item: u32, shifts: u8) -> u32 {
     if is_unconstrained() {
         item >> (8 * shifts)
@@ -431,15 +428,16 @@ unconstrained fn attach_len_to_msg_block(
     // Set the last two 4 byte ints as the first/second half of the 8 bytes of the length.
     let len = 8 * message_size;
     let len_bytes: [u8; 8] = (len as Field).to_be_bytes();
-    for i in 0..=1 {
-        let shift = i * 4;
-        msg_block[INT_SIZE_PTR + i] = make_item(
-            len_bytes[shift],
-            len_bytes[shift + 1],
-            len_bytes[shift + 2],
-            len_bytes[shift + 3],
-        );
-    }
+    msg_block[INT_SIZE_PTR] = (len_bytes[0] as u32) << 24
+        | (len_bytes[1] as u32) << 16
+        | (len_bytes[2] as u32) << 8
+        | (len_bytes[3] as u32);
+
+    msg_block[INT_SIZE_PTR + 1] = (len_bytes[4] as u32) << 24
+        | (len_bytes[5] as u32) << 16
+        | (len_bytes[6] as u32) << 8
+        | (len_bytes[7] as u32);
+
     msg_block
 }
 
@@ -459,12 +457,16 @@ fn verify_msg_len(
     verify_msg_block_equals_last(msg_block, last_block, msg_byte_ptr);
 
     // We verify the message length was inserted correctly by reversing the byte decomposition.
-    let mut reconstructed_len: u64 = 0;
-    for i in INT_SIZE_PTR..INT_BLOCK_SIZE {
-        reconstructed_len = reconstructed_len * TWO_POW_32;
-        reconstructed_len = reconstructed_len + msg_block[i] as u64;
-    }
-    let len = 8 * message_size as u64;
+    std::static_assert(
+        INT_SIZE_PTR + 2 == INT_BLOCK_SIZE,
+        "INT_SIZE_PTR + 2 must equal INT_BLOCK_SIZE",
+    );
+    let reconstructed_len_hi = msg_block[INT_SIZE_PTR] as Field;
+    let reconstructed_len_lo = msg_block[INT_SIZE_PTR + 1] as Field;
+
+    let reconstructed_len: Field =
+        reconstructed_len_hi * TWO_POW_32 as Field + reconstructed_len_lo;
+    let len = 8 * (message_size as Field);
     assert_eq(reconstructed_len, len);
 }
 
@@ -636,6 +638,7 @@ mod equivalence_test {
     #[test]
     fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
         let message_size = message_size % 100;
+        // Safety: test function
         let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size as u32) };
         let sha = super::sha256_var(msg, message_size);
         assert_eq(sha, unconstrained_sha);
