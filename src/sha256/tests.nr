@@ -3,9 +3,9 @@ use super::{
     partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
     set_item_zeros, sha256, sha256_var,
 };
-use super::constants::INITIAL_STATE;
-use super::constants::INT_BLOCK;
-use super::constants::test_inputs::DATA;
+use crate::sha256::constants::INITIAL_STATE;
+use crate::sha256::constants::INT_BLOCK;
+use crate::sha256::constants::test_inputs::DATA;
 
 #[export]
 fn test_sha256_1(input: [u8; 1], len: u64) -> [u8; 32] {
@@ -341,52 +341,53 @@ fn test_attach_len_to_msg_block() {
     assert_eq(msg_block[15], 3584);
 }
 
+
 #[test]
-fn test_partial_hash() {
+fn fuzz_test_partial_hash(data: [u8; 192]) {
     let mut data0 = [0; 128];
     for i in 0..data0.len() {
-        data0[i] = DATA[i];
+        data0[i] = data[i];
     }
     let mut data1 = [0; 64];
     for i in 0..data1.len() {
-        data1[i] = DATA[data0.len() + i];
+        data1[i] = data[data0.len() + i];
     }
     let state = partial_sha256_var_interstitial(INITIAL_STATE, data0, 128);
     let hash = partial_sha256_var_end(state, data1, data1.len(), DATA.len());
-    let correct_hash = sha256_var(DATA, DATA.len() as u64);
+    let correct_hash = sha256_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }
 
 #[test]
-fn test_partial_hash_interstitial() {
+fn fuzz_test_partial_hash_interstitial(data: [u8; 192]) {
     let mut data0 = [0; 64];
     let mut data1 = [0; 64];
     let mut data2 = [0; 64];
     for i in 0..data0.len() {
-        data0[i] = DATA[i];
-        data1[i] = DATA[64 + i];
-        data2[i] = DATA[128 + i];
+        data0[i] = data[i];
+        data1[i] = data[64 + i];
+        data2[i] = data[128 + i];
     }
     let pre_hash = partial_sha256_var_interstitial(INITIAL_STATE, data0, 64);
-    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, data1.len());
-    let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), DATA.len());
-    let correct_hash = sha256_var(DATA, DATA.len() as u64);
+    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
+    let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), data.len());
+    let correct_hash = sha256_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }
 
 #[test]
-fn test_partial_hash_interstitial_var() {
+fn fuzz_test_partial_hash_end(data: [u8; 192]) {
     let mut data0 = [0; 64];
-    let mut data1 = [0; 128]; // second block not used
+    let mut data1 = [0; 128]; // last 64 bytes not used
     let mut data2 = [0; 64];
     for i in 0..data0.len() {
-        data0[i] = DATA[i];
-        data1[i] = DATA[64 + i];
-        data2[i] = DATA[128 + i];
+        data0[i] = data[i];
+        data1[i] = data[64 + i];
+        data2[i] = data[128 + i];
     }
-    let correct_hash = sha256_var(DATA, DATA.len() as u64);
     let pre_hash = partial_sha256_var_interstitial(INITIAL_STATE, data0, 64);
     let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
-    let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), DATA.len());
+    let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), data.len());
+    let correct_hash = sha256_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }
