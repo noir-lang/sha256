@@ -342,7 +342,6 @@ fn test_attach_len_to_msg_block() {
     assert_eq(msg_block[15], 3584);
 }
 
-
 #[test]
 fn fuzz_test_partial_hash(data: [u8; 192]) {
     let mut data0 = [0; 128];

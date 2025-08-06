@@ -38,7 +38,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
         }
     } else {
         let (mut h, mut msg_block, mut msg_byte_ptr) =
-            process_full_blocks(msg, message_size, N, INITIAL_STATE);
+            process_full_blocks(msg, message_size, INITIAL_STATE);
 
         finalize_sha256_blocks(msg, message_size, N, h, msg_block, msg_byte_ptr)
     }
@@ -101,15 +101,15 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HA
 fn process_full_blocks<let N: u32>(
     msg: [u8; N],
     message_size: u32,
-    total_len: u32,
     mut h: STATE,
 ) -> (STATE, MSG_BLOCK, u32) {
     let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
     let mut msg_byte_ptr = 0;
-    let num_blocks = total_len / BLOCK_SIZE;
+    let num_blocks = N / BLOCK_SIZE;
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
         let (new_msg_block, new_msg_byte_ptr) =
+        // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
@@ -503,6 +503,7 @@ fn finalize_sha256_blocks<let N: u32>(
         let num_blocks = total_len / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_blocks;
         let (new_msg_block, new_msg_byte_ptr) =
+        // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
@@ -539,6 +540,7 @@ fn finalize_sha256_blocks<let N: u32>(
         msg_byte_ptr = 0;
     }
 
+    // Safety: separate verification function
     msg_block = unsafe { attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size) };
 
     verify_msg_len(msg_block, last_block, msg_byte_ptr, message_size);
@@ -568,7 +570,7 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
             __sha_partial_var_interstitial(h, msg, message_size)
         }
     } else {
-        let (mut h, _, _) = process_full_blocks(msg, message_size, N, h);
+        let (mut h, _, _) = process_full_blocks(msg, message_size, h);
 
         h
     }
@@ -581,8 +583,8 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
  * @param N - the maximum length of the message to hash
  * @param h - the intermediate hash state
  * @param msg - the remaining preimage to hash
- * @param message_size - the size of the remaining preimage
- * @param real_message_size -= the total size of the preimage
+ * @param message_size - the size of the current chunk
+ * @param real_message_size - the total size of the original preimage
  * @return finalized sha256 hash
  */
 pub fn partial_sha256_var_end<let N: u32>(
@@ -595,10 +597,16 @@ pub fn partial_sha256_var_end<let N: u32>(
     if std::runtime::is_unconstrained() {
         // Safety: running as an unconstrained function
         unsafe {
-            __sha_partial_var_end(h, msg, message_size, real_message_size)
+            h = __sha_partial_var_interstitial(h, msg, message_size);
+
+            // Handle setup of the final msg block.
+            // This case is only hit if the msg is less than the block size,
+            // or our message cannot be evenly split into blocks.
+
+            finalize_last_sha256_block(h, real_message_size, msg)
         }
     } else {
-        let (mut h, mut msg_block, mut msg_byte_ptr) = process_full_blocks(msg, message_size, N, h);
+        let (mut h, mut msg_block, mut msg_byte_ptr) = process_full_blocks(msg, message_size, h);
         finalize_sha256_blocks(msg, real_message_size, N, h, msg_block, msg_byte_ptr)
     }
 }
@@ -616,21 +624,6 @@ unconstrained fn __sha_partial_var_interstitial<let N: u32>(
         h = sha256_compression(msg_block, h);
     }
     h
-}
-
-unconstrained fn __sha_partial_var_end<let N: u32>(
-    mut h: [u32; 8],
-    msg: [u8; N],
-    message_size: u32,
-    real_message_size: u32,
-) -> [u8; 32] {
-    h = __sha_partial_var_interstitial(h, msg, message_size);
-
-    // Handle setup of the final msg block.
-    // This case is only hit if the msg is less than the block size,
-    // or our message cannot be evenly split into blocks.
-
-    finalize_last_sha256_block(h, real_message_size, msg)
 }
 
 mod equivalence_test {
