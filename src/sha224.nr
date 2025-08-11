@@ -45,7 +45,7 @@ unconstrained fn __sha224_var<let N: u32>(
 }
 
 /**
- * Given some state of a partially computed sha256 hash and remaining preimage, complete the hash
+ * Given some state of a partially computed sha256/sha224 hash and remaining preimage, complete the hash
  * @notice used for traditional partial hashing
  *
  * @param N - the maximum length of the message to hash
@@ -53,7 +53,7 @@ unconstrained fn __sha224_var<let N: u32>(
  * @param msg - the remaining preimage to hash
  * @param message_size - the size of the current chunk
  * @param real_message_size - the total size of the original preimage
- * @return finalized sha256 hash
+ * @return finalized sha24 hash
  */
 pub fn partial_sha224_var_end<let N: u32>(
     mut h: [u32; 8],

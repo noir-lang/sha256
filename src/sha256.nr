@@ -3,7 +3,7 @@ use std::runtime::is_unconstrained;
 
 use constants::{
     BLOCK_BYTE_PTR, BLOCK_SIZE, HASH, INITIAL_STATE, INT_BLOCK, INT_BLOCK_SIZE, INT_SIZE,
-    INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8
+    INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
 };
 
 pub(crate) mod constants;
@@ -25,7 +25,6 @@ pub fn sha256<let N: u32>(input: [u8; N]) -> HASH
 pub fn digest<let N: u32>(msg: [u8; N]) -> HASH {
     sha256_var(msg, N as u64)
 }
-
 
 // Variable size SHA-256 hash
 pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
@@ -67,7 +66,7 @@ pub(crate) unconstrained fn __sha_var<let N: u32>(
 }
 
 // Helper function to finalize the message block with padding and length
-unconstrained pub(crate)fn finalize_last_sha256_block<let N: u32>(
+pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
     mut h: STATE,
     message_size: u32,
     msg: [u8; N],
@@ -142,7 +141,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start`.
 // Returns the block and the length that has been copied rather than padded with zeros.
-unconstrained pub(crate) fn build_msg_block<let N: u32>(
+pub(crate) unconstrained fn build_msg_block<let N: u32>(
     msg: [u8; N],
     message_size: u32,
     msg_start: u32,
