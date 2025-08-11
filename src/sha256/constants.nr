@@ -34,6 +34,7 @@ pub(crate) type MSG_BLOCK = INT_BLOCK;
 // The hash is 32 bytes.
 pub(crate) type HASH = [u8; 32];
 
+
 // The state accumulates the blocks.
 // Its overall size is the same as the `HASH`.
 pub(crate) type STATE = [u32; 8];
