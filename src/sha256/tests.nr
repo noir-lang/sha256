@@ -95,6 +95,8 @@ fn msg_multiple_over_block() {
     assert_eq(sha256_var(input, input.len() as u64), result);
 }
 
+
+
 #[test]
 fn msg_just_under_block() {
     let input = [
