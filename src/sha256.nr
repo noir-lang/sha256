@@ -44,6 +44,27 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
     }
 }
 
+pub(crate) unconstrained fn __sha_var<let N: u32>(
+    msg: [u8; N],
+    message_size: u32,
+    initial_state: STATE,
+) -> HASH {
+    let num_full_blocks = message_size / BLOCK_SIZE;
+    // Intermediate hash, starting with the canonical initial value
+    let mut h: STATE = initial_state;
+    // Pointer into msg_block on a 64 byte scale
+    for i in 0..num_full_blocks {
+        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        h = sha256_compression(msg_block, h);
+    }
+
+    // Handle setup of the final msg block.
+    // This case is only hit if the msg is less than the block size,
+    // or our message cannot be evenly split into blocks.
+
+    finalize_last_sha256_block(h, message_size, msg)
+}
+
 // Helper function to finalize the message block with padding and length
 pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
     mut h: STATE,
@@ -82,20 +103,7 @@ pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
 
 // Variable size SHA-256 hash
 unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HASH {
-    let num_full_blocks = message_size / BLOCK_SIZE;
-    // Intermediate hash, starting with the canonical initial value
-    let mut h: STATE = INITIAL_STATE;
-    // Pointer into msg_block on a 64 byte scale
-    for i in 0..num_full_blocks {
-        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
-        h = sha256_compression(msg_block, h);
-    }
-
-    // Handle setup of the final msg block.
-    // This case is only hit if the msg is less than the block size,
-    // or our message cannot be evenly split into blocks.
-
-    finalize_last_sha256_block(h, message_size, msg)
+    __sha_var(msg, message_size, INITIAL_STATE)
 }
 
 pub(crate) fn process_full_blocks<let N: u32>(
@@ -109,7 +117,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
         let (new_msg_block, new_msg_byte_ptr) =
-            // Safety: separate verification function
+        // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
@@ -503,7 +511,7 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
         let num_blocks = total_len / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_blocks;
         let (new_msg_block, new_msg_byte_ptr) =
-            // Safety: separate verification function
+        // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {

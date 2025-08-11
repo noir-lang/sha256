@@ -3,7 +3,7 @@ use super::{
     partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
     set_item_zeros, sha256, sha256_var,
 };
-use super::constants::{INITIAL_STATE, INT_BLOCK, test_inputs::DATA};
+use super::constants::{INITIAL_STATE, INT_BLOCK};
 
 #[export]
 fn test_sha256_1(input: [u8; 1], len: u64) -> [u8; 32] {
@@ -353,7 +353,7 @@ fn fuzz_test_partial_hash(data: [u8; 192]) {
         data1[i] = data[data0.len() + i];
     }
     let state = partial_sha256_var_interstitial(INITIAL_STATE, data0, 128);
-    let hash = partial_sha256_var_end(state, data1, data1.len(), DATA.len());
+    let hash = partial_sha256_var_end(state, data1, data1.len(), data.len());
     let correct_hash = sha256_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }

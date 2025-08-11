@@ -1,5 +1,6 @@
-use super::sha224_var;
-// use super::constants::{INITIAL_STATE, INT_BLOCK, test_inputs::DATA};
+use crate::sha224::constants as sha224_constants;
+use crate::sha256::partial_sha256_var_interstitial;
+use super::{partial_sha224_var_end, sha224_var};
 
 #[test]
 fn empty_sha224() {
@@ -234,4 +235,56 @@ fn same_msg_len_variable_padding() {
     assert_eq(var_length_hash_512, var_full_length_hash);
     assert_eq(var_length_hash_575, var_full_length_hash);
     assert_eq(var_length_hash_576, var_full_length_hash);
+}
+
+#[test]
+fn fuzz_test_partial_hash_sha224(data: [u8; 192]) {
+    let mut data0 = [0; 128];
+    for i in 0..data0.len() {
+        data0[i] = data[i];
+    }
+    let mut data1 = [0; 64];
+    for i in 0..data1.len() {
+        data1[i] = data[data0.len() + i];
+    }
+    let state = partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 128);
+    let hash = partial_sha224_var_end(state, data1, data1.len(), data.len());
+    let correct_hash = sha224_var(data, data.len() as u64);
+    assert_eq(hash, correct_hash);
+}
+
+#[test]
+fn fuzz_test_partial_hash_interstitial_sha224(data: [u8; 192]) {
+    let mut data0 = [0; 64];
+    let mut data1 = [0; 64];
+    let mut data2 = [0; 64];
+    for i in 0..data0.len() {
+        data0[i] = data[i];
+        data1[i] = data[64 + i];
+        data2[i] = data[128 + i];
+    }
+    let pre_hash =
+        partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 64);
+    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
+    let hash = partial_sha224_var_end(interstitial_hash, data2, data2.len(), data.len());
+    let correct_hash = sha224_var(data, data.len() as u64);
+    assert_eq(hash, correct_hash);
+}
+
+#[test]
+fn fuzz_test_partial_hash_end_sha224(data: [u8; 192]) {
+    let mut data0 = [0; 64];
+    let mut data1 = [0; 128]; // last 64 bytes not used
+    let mut data2 = [0; 64];
+    for i in 0..data0.len() {
+        data0[i] = data[i];
+        data1[i] = data[64 + i];
+        data2[i] = data[128 + i];
+    }
+    let pre_hash =
+        partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 64);
+    let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
+    let hash = partial_sha224_var_end(interstitial_hash, data2, data2.len(), data.len());
+    let correct_hash = sha224_var(data, data.len() as u64);
+    assert_eq(hash, correct_hash);
 }
