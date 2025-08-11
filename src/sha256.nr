@@ -45,7 +45,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
 }
 
 // Helper function to finalize the message block with padding and length
-unconstrained fn finalize_last_sha256_block<let N: u32>(
+pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
     mut h: STATE,
     message_size: u32,
     msg: [u8; N],
@@ -98,7 +98,7 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HA
     finalize_last_sha256_block(h, message_size, msg)
 }
 
-fn process_full_blocks<let N: u32>(
+pub(crate) fn process_full_blocks<let N: u32>(
     msg: [u8; N],
     message_size: u32,
     mut h: STATE,
@@ -109,7 +109,7 @@ fn process_full_blocks<let N: u32>(
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
         let (new_msg_block, new_msg_byte_ptr) =
-        // Safety: separate verification function
+            // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
@@ -133,7 +133,7 @@ fn process_full_blocks<let N: u32>(
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start`.
 // Returns the block and the length that has been copied rather than padded with zeros.
-unconstrained fn build_msg_block<let N: u32>(
+pub(crate) unconstrained fn build_msg_block<let N: u32>(
     msg: [u8; N],
     message_size: u32,
     msg_start: u32,
@@ -487,7 +487,7 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
     out_h
 }
 
-fn finalize_sha256_blocks<let N: u32>(
+pub(crate) fn finalize_sha256_blocks<let N: u32>(
     msg: [u8; N],
     message_size: u32,
     total_len: u32,
@@ -503,7 +503,7 @@ fn finalize_sha256_blocks<let N: u32>(
         let num_blocks = total_len / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_blocks;
         let (new_msg_block, new_msg_byte_ptr) =
-        // Safety: separate verification function
+            // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
