@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.5](https://github.com/noir-lang/sha256/compare/v0.1.4...v0.1.5) (2025-08-13)
+
+
+### Features
+
+* Add sha224 support ([#28](https://github.com/noir-lang/sha256/issues/28)) ([de3af27](https://github.com/noir-lang/sha256/commit/de3af272f83d301551682d0518c0bbf0d011d192))
+* Added partial hash computation ([#16](https://github.com/noir-lang/sha256/issues/16)) ([98bc1c6](https://github.com/noir-lang/sha256/commit/98bc1c6fdedf6112486c575ee342741d060afd88))
+* Remove overflow checks in `verify_msg_len` function ([#24](https://github.com/noir-lang/sha256/issues/24)) ([dbffe11](https://github.com/noir-lang/sha256/commit/dbffe11de6ddf8b6d893ba0b6a67ed88a4b53b31))
+
 ## [0.1.4](https://github.com/noir-lang/sha256/compare/v0.1.3...v0.1.4) (2025-05-21)
 
 

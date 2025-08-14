@@ -1,54 +1,19 @@
-use super::{
-    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, make_item,
-    partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
-    set_item_zeros, sha256, sha256_var,
-};
-use super::constants::{INITIAL_STATE, INT_BLOCK};
-
-#[export]
-fn test_sha256_1(input: [u8; 1], len: u64) -> [u8; 32] {
-    sha256_var(input, len)
-}
-
-#[export]
-fn test_sha256_200(input: [u8; 200], len: u64) -> [u8; 32] {
-    sha256_var(input, len)
-}
-
-#[export]
-fn test_sha256_511(input: [u8; 511], len: u64) -> [u8; 32] {
-    sha256_var(input, len)
-}
-
-#[export]
-fn test_sha256_512(input: [u8; 512], len: u64) -> [u8; 32] {
-    sha256_var(input, len)
-}
+use crate::sha224::constants as sha224_constants;
+use crate::sha256::partial_sha256_var_interstitial;
+use super::{partial_sha224_var_end, sha224_var};
 
 #[test]
-fn empty_sha256() {
+fn empty_sha224() {
     let input = [];
     let result = [
-        0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9,
-        0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52,
-        0xb8, 0x55,
+        0xd1, 0x4a, 0x02, 0x8c, 0x2a, 0x3a, 0x2b, 0xc9, 0x47, 0x61, 0x02, 0xbb, 0x28, 0x82, 0x34,
+        0xc4, 0x15, 0xa2, 0xb0, 0x1f, 0x82, 0x8e, 0xa6, 0x2a, 0xc5, 0xb3, 0xe4, 0x2f,
     ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len() as u64), result);
 }
 
 #[test]
-fn smoke_test() {
-    let input = [0xbd];
-    let result = [
-        0x68, 0x32, 0x57, 0x20, 0xaa, 0xbd, 0x7c, 0x82, 0xf3, 0x0f, 0x55, 0x4b, 0x31, 0x3d, 0x05,
-        0x70, 0xc9, 0x5a, 0xcc, 0xbb, 0x7d, 0xc4, 0xb5, 0xaa, 0xe1, 0x12, 0x04, 0xc0, 0x8f, 0xfe,
-        0x73, 0x2b,
-    ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
-}
-
-#[test]
-fn msg_just_over_block() {
+fn msg_just_over_block_sha224() {
     let input = [
         102, 114, 111, 109, 58, 114, 117, 110, 110, 105, 101, 114, 46, 108, 101, 97, 103, 117, 101,
         115, 46, 48, 106, 64, 105, 99, 108, 111, 117, 100, 46, 99, 111, 109, 13, 10, 99, 111, 110,
@@ -56,14 +21,14 @@ fn msg_just_over_block() {
         110, 59, 32, 99, 104, 97, 114, 115, 101, 116,
     ];
     let result = [
-        91, 122, 146, 93, 52, 109, 133, 148, 171, 61, 156, 70, 189, 238, 153, 7, 222, 184, 94, 24,
-        65, 114, 192, 244, 207, 199, 87, 232, 192, 224, 171, 207,
+        150, 14, 160, 186, 70, 211, 123, 220, 168, 249, 39, 26, 193, 231, 184, 35, 255, 13, 53, 98,
+        111, 178, 115, 23, 167, 7, 93, 41,
     ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len() as u64), result);
 }
 
 #[test]
-fn msg_multiple_over_block() {
+fn msg_multiple_over_block_sha224() {
     let input = [
         102, 114, 111, 109, 58, 114, 117, 110, 110, 105, 101, 114, 46, 108, 101, 97, 103, 117, 101,
         115, 46, 48, 106, 64, 105, 99, 108, 111, 117, 100, 46, 99, 111, 109, 13, 10, 99, 111, 110,
@@ -89,14 +54,24 @@ fn msg_multiple_over_block() {
         86, 101, 114, 115, 105, 111, 110, 58, 83, 117, 98, 106, 101, 99,
     ];
     let result = [
-        116, 90, 151, 31, 78, 22, 138, 180, 211, 189, 69, 76, 227, 200, 155, 29, 59, 123, 154, 60,
-        47, 153, 203, 129, 157, 251, 48, 2, 79, 11, 65, 47,
+        170, 28, 127, 29, 154, 66, 50, 175, 185, 141, 168, 5, 242, 148, 233, 184, 215, 240, 92, 85,
+        227, 86, 112, 84, 190, 124, 74, 152,
     ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len() as u64), result);
 }
 
 #[test]
-fn msg_just_under_block() {
+fn smoke_test_sha224() {
+    let input = [0xbd];
+    let result = [
+        0xb1, 0xe4, 0x6b, 0xb9, 0xef, 0xe4, 0x5a, 0xf5, 0x54, 0x36, 0x34, 0x49, 0xc6, 0x94, 0x5a,
+        0x0d, 0x61, 0x69, 0xfc, 0x3a, 0x5a, 0x39, 0x6a, 0x56, 0xcb, 0x97, 0xcb, 0x57,
+    ];
+    assert_eq(sha224_var(input, input.len() as u64), result);
+}
+
+#[test]
+fn msg_just_under_block_sha224() {
     let input = [
         102, 114, 111, 109, 58, 114, 117, 110, 110, 105, 101, 114, 46, 108, 101, 97, 103, 117, 101,
         115, 46, 48, 106, 64, 105, 99, 108, 111, 117, 100, 46, 99, 111, 109, 13, 10, 99, 111, 110,
@@ -104,10 +79,10 @@ fn msg_just_under_block() {
         110, 59,
     ];
     let result = [
-        143, 140, 76, 173, 222, 123, 102, 68, 70, 149, 207, 43, 39, 61, 34, 79, 216, 252, 213, 165,
-        74, 16, 110, 74, 29, 64, 138, 167, 30, 1, 9, 119,
+        134, 250, 131, 194, 116, 121, 209, 110, 82, 35, 45, 92, 218, 132, 49, 39, 58, 40, 58, 212,
+        59, 246, 163, 69, 252, 114, 19, 17,
     ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len() as u64), result);
 }
 
 #[test]
@@ -138,10 +113,10 @@ fn msg_big_not_block_multiple() {
         97, 103, 101, 45, 73, 100, 58, 68, 97, 116, 101, 58, 116, 111, 59, 32, 98, 61,
     ];
     let result = [
-        112, 144, 73, 182, 208, 98, 9, 238, 54, 229, 61, 145, 222, 17, 72, 62, 148, 222, 186, 55,
-        192, 82, 220, 35, 66, 47, 193, 200, 22, 38, 26, 186,
+        240, 237, 233, 117, 31, 133, 136, 125, 9, 248, 193, 98, 207, 74, 21, 25, 71, 84, 41, 97,
+        219, 153, 164, 62, 223, 169, 124, 37,
     ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len() as u64), result);
 }
 
 #[test]
@@ -176,11 +151,11 @@ fn msg_big_with_padding() {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ];
     let result = [
-        32, 85, 108, 174, 127, 112, 178, 182, 8, 43, 134, 123, 192, 211, 131, 66, 184, 240, 212,
-        181, 240, 180, 106, 195, 24, 117, 54, 129, 19, 10, 250, 53,
+        186, 236, 174, 87, 162, 35, 146, 29, 161, 143, 250, 157, 246, 199, 44, 232, 63, 230, 53, 8,
+        153, 121, 231, 12, 184, 77, 138, 20,
     ];
     let message_size = 297;
-    assert_eq(sha256_var(input, message_size), result);
+    assert_eq(sha224_var(input, message_size), result);
 }
 
 #[test]
@@ -202,10 +177,10 @@ fn msg_big_no_padding() {
         103, 49, 23, 164, 171, 188, 194, 197, 156, 187, 249, 28, 198, 95, 69, 15, 182, 56, 54, 38,
     ];
     let result = [
-        32, 85, 108, 174, 127, 112, 178, 182, 8, 43, 134, 123, 192, 211, 131, 66, 184, 240, 212,
-        181, 240, 180, 106, 195, 24, 117, 54, 129, 19, 10, 250, 53,
+        186, 236, 174, 87, 162, 35, 146, 29, 161, 143, 250, 157, 246, 199, 44, 232, 63, 230, 53, 8,
+        153, 121, 231, 12, 184, 77, 138, 20,
     ];
-    assert_eq(sha256_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len() as u64), result);
 }
 
 #[test]
@@ -249,101 +224,21 @@ fn same_msg_len_variable_padding() {
     }
 
     // Compute hashes of all inputs (with same message length)
-    let fixed_length_hash = sha256(input);
-    let var_full_length_hash = sha256_var(input, input.len() as u64);
-    let var_length_hash_511 = sha256_var(input_511, input.len() as u64);
-    let var_length_hash_512 = sha256_var(input_512, input.len() as u64);
-    let var_length_hash_575 = sha256_var(input_575, input.len() as u64);
-    let var_length_hash_576 = sha256_var(input_576, input.len() as u64);
+    let var_full_length_hash = sha224_var(input, input.len() as u64);
+    let var_length_hash_511 = sha224_var(input_511, input.len() as u64);
+    let var_length_hash_512 = sha224_var(input_512, input.len() as u64);
+    let var_length_hash_575 = sha224_var(input_575, input.len() as u64);
+    let var_length_hash_576 = sha224_var(input_576, input.len() as u64);
 
     // All of the above should have produced the same hash
-    assert_eq(var_full_length_hash, fixed_length_hash);
-    assert_eq(var_length_hash_511, fixed_length_hash);
-    assert_eq(var_length_hash_512, fixed_length_hash);
-    assert_eq(var_length_hash_575, fixed_length_hash);
-    assert_eq(var_length_hash_576, fixed_length_hash);
+    assert_eq(var_length_hash_511, var_full_length_hash);
+    assert_eq(var_length_hash_512, var_full_length_hash);
+    assert_eq(var_length_hash_575, var_full_length_hash);
+    assert_eq(var_length_hash_576, var_full_length_hash);
 }
 
 #[test]
-fn test_get_item_byte() {
-    let fld = make_item(10, 20, 30, 40);
-    assert_eq(fld, 0x0a141e28);
-    assert_eq(get_item_byte(fld, 0), 10);
-    assert_eq(get_item_byte(fld, 4), 10);
-    assert_eq(get_item_byte(fld, 6), 30);
-}
-
-#[test]
-fn test_byte_into_item() {
-    let fld = make_item(0, 20, 0, 0);
-    assert_eq(byte_into_item(20, 1), fld);
-    assert_eq(byte_into_item(20, 5), fld);
-}
-
-#[test]
-fn test_set_item_zeros() {
-    let fld0 = make_item(10, 20, 30, 40);
-    let fld1 = make_item(10, 0, 0, 0);
-    assert_eq(set_item_zeros(fld0, 3), fld1);
-    assert_eq(set_item_zeros(fld0, 4), 0);
-    assert_eq(set_item_zeros(0, 4), 0);
-}
-
-#[test]
-fn test_set_item_byte_then_zeros() {
-    let fld0 = make_item(10, 20, 30, 40);
-    let fld1 = make_item(10, 50, 0, 0);
-    assert_eq(set_item_byte_then_zeros(fld0, 1, 50), fld1);
-}
-
-#[test]
-fn test_build_msg_block_start_0() {
-    let input = [
-        102, 114, 111, 109, 58, 114, 117, 110, 110, 105, 101, 114, 46, 108, 101, 97, 103, 117, 101,
-        115, 46, 48,
-    ];
-    assert_eq(input.len(), 22);
-    // Safety: test function
-    let (msg_block, msg_byte_ptr) = unsafe { build_msg_block(input, input.len(), 0) };
-    assert_eq(msg_byte_ptr, input.len());
-    assert_eq(msg_block[0], make_item(input[0], input[1], input[2], input[3]));
-    assert_eq(msg_block[1], make_item(input[4], input[5], input[6], input[7]));
-    assert_eq(msg_block[5], make_item(input[20], input[21], 0, 0));
-    assert_eq(msg_block[6], 0);
-}
-
-#[test]
-fn test_build_msg_block_start_1() {
-    let input = [
-        102, 114, 111, 109, 58, 114, 117, 110, 110, 105, 101, 114, 46, 108, 101, 97, 103, 117, 101,
-        115, 46, 48, 106, 64, 105, 99, 108, 111, 117, 100, 46, 99, 111, 109, 13, 10, 99, 111, 110,
-        116, 101, 110, 116, 45, 116, 121, 112, 101, 58, 116, 101, 120, 116, 47, 112, 108, 97, 105,
-        110, 59, 32, 99, 104, 97, 114, 115, 101, 116,
-    ];
-    assert_eq(input.len(), 68);
-    // Safety: test function
-    let (msg_block, msg_byte_ptr) = unsafe { build_msg_block(input, input.len(), 64) };
-    assert_eq(msg_byte_ptr, 4);
-    assert_eq(msg_block[0], make_item(input[64], input[65], input[66], input[67]));
-    assert_eq(msg_block[1], 0);
-}
-
-#[test]
-fn test_attach_len_to_msg_block() {
-    let input: INT_BLOCK = [
-        2152555847, 1397309779, 1936618851, 1262052426, 1936876331, 1985297723, 543702374,
-        1919905082, 1131376244, 1701737517, 1417244773, 978151789, 1697470053, 1920166255,
-        1849316213, 1651139939,
-    ];
-    // Safety: test function
-    let msg_block = unsafe { attach_len_to_msg_block(input, 1, 448) };
-    assert_eq(msg_block[0], ((1 << 7) as u32) * 256 * 256 * 256);
-    assert_eq(msg_block[1], 0);
-    assert_eq(msg_block[15], 3584);
-}
-
-#[test]
-fn fuzz_test_partial_hash(data: [u8; 192]) {
+fn fuzz_test_partial_hash_sha224(data: [u8; 192]) {
     let mut data0 = [0; 128];
     for i in 0..data0.len() {
         data0[i] = data[i];
@@ -352,14 +247,14 @@ fn fuzz_test_partial_hash(data: [u8; 192]) {
     for i in 0..data1.len() {
         data1[i] = data[data0.len() + i];
     }
-    let state = partial_sha256_var_interstitial(INITIAL_STATE, data0, 128);
-    let hash = partial_sha256_var_end(state, data1, data1.len(), data.len());
-    let correct_hash = sha256_var(data, data.len() as u64);
+    let state = partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 128);
+    let hash = partial_sha224_var_end(state, data1, data1.len(), data.len());
+    let correct_hash = sha224_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }
 
 #[test]
-fn fuzz_test_partial_hash_interstitial(data: [u8; 192]) {
+fn fuzz_test_partial_hash_interstitial_sha224(data: [u8; 192]) {
     let mut data0 = [0; 64];
     let mut data1 = [0; 64];
     let mut data2 = [0; 64];
@@ -368,15 +263,16 @@ fn fuzz_test_partial_hash_interstitial(data: [u8; 192]) {
         data1[i] = data[64 + i];
         data2[i] = data[128 + i];
     }
-    let pre_hash = partial_sha256_var_interstitial(INITIAL_STATE, data0, 64);
+    let pre_hash =
+        partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 64);
     let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
-    let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), data.len());
-    let correct_hash = sha256_var(data, data.len() as u64);
+    let hash = partial_sha224_var_end(interstitial_hash, data2, data2.len(), data.len());
+    let correct_hash = sha224_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }
 
 #[test]
-fn fuzz_test_partial_hash_end(data: [u8; 192]) {
+fn fuzz_test_partial_hash_end_sha224(data: [u8; 192]) {
     let mut data0 = [0; 64];
     let mut data1 = [0; 128]; // last 64 bytes not used
     let mut data2 = [0; 64];
@@ -385,9 +281,10 @@ fn fuzz_test_partial_hash_end(data: [u8; 192]) {
         data1[i] = data[64 + i];
         data2[i] = data[128 + i];
     }
-    let pre_hash = partial_sha256_var_interstitial(INITIAL_STATE, data0, 64);
+    let pre_hash =
+        partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 64);
     let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
-    let hash = partial_sha256_var_end(interstitial_hash, data2, data2.len(), data.len());
-    let correct_hash = sha256_var(data, data.len() as u64);
+    let hash = partial_sha224_var_end(interstitial_hash, data2, data2.len(), data.len());
+    let correct_hash = sha224_var(data, data.len() as u64);
     assert_eq(hash, correct_hash);
 }
