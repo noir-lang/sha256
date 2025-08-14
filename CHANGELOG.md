@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/noir-lang/sha256/compare/v0.1.5...v0.2.0) (2025-08-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* switch to new bit-shift semantic ([#27](https://github.com/noir-lang/sha256/issues/27))
+
+### Bug Fixes
+
+* Switch to new bit-shift semantic ([#27](https://github.com/noir-lang/sha256/issues/27)) ([3430661](https://github.com/noir-lang/sha256/commit/3430661b2b9a87cb8a10801ae4418b0da67f6b08))
+
 ## [0.1.5](https://github.com/noir-lang/sha256/compare/v0.1.4...v0.1.5) (2025-08-13)
 
 
