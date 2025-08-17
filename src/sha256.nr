@@ -117,7 +117,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
         let (new_msg_block, new_msg_byte_ptr) =
-        // Safety: separate verification function
+            // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
@@ -515,7 +515,7 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
         let num_blocks = total_len / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_blocks;
         let (new_msg_block, new_msg_byte_ptr) =
-        // Safety: separate verification function
+            // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         if msg_start < message_size {
