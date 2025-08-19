@@ -173,7 +173,7 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
             } else {
                 0
             };
-            msg_item = msg_item << 8 + msg_byte as u32;
+            msg_item = (msg_item << 8) + msg_byte as u32;
         }
         msg_block[i] = msg_item;
     }
@@ -351,9 +351,9 @@ fn byte_into_item(msg_byte: u8, msg_byte_ptr: BLOCK_BYTE_PTR) -> u32 {
 #[inline_always]
 fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
     let mut item = b0 as u32;
-    item = item << 8 + b1 as u32;
-    item = item << 8 + b2 as u32;
-    item = item << 8 + b3 as u32;
+    item = (item << 8) + b1 as u32;
+    item = (item << 8) + b2 as u32;
+    item = (item << 8) + b3 as u32;
     item
 }
 
@@ -372,7 +372,7 @@ fn lshift8(item: u32, shifts: u32) -> u32 {
             item << (8 * shifts)
         }
     } else {
-        if shifts == 4 {
+        if shifts >= 4 {
             0
         } else {
             item * BIT_SHIFT_TABLE[shifts]
