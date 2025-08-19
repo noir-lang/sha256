@@ -402,7 +402,7 @@ fn lshift8(item: u32, shifts: u32) -> u32 {
         if shifts >= 4 {
             0
         } else {
-            item << (8 * shifts) as u8
+            item << (8 * shifts)
         }
     } else {
         // We can do a for loop up to INT_SIZE or an if-else.
@@ -430,7 +430,7 @@ fn rshift8(item: u32, shifts: u32) -> u32 {
         if 8 * shifts >= 32 {
             0
         } else {
-            item >> (8 * shifts) as u8
+            item >> (8 * shifts)
         }
     } else {
         // Division wouldn't work on `Field`.
