@@ -372,7 +372,7 @@ fn lshift8(item: u32, shifts: u32) -> u32 {
             item << (8 * shifts)
         }
     } else {
-        if shifts >= 4 {
+        if shifts == 4 {
             0
         } else {
             item * BIT_SHIFT_TABLE[shifts]
