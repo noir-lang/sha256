@@ -112,66 +112,37 @@ pub(crate) fn process_full_blocks<let N: u32>(
     message_size: u32,
     mut h: STATE,
 ) -> (STATE, MSG_BLOCK, u32) {
-    let curr = h;
-    let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
-    let mut msg_byte_ptr = 0;
     let num_blocks = N / BLOCK_SIZE;
-    let num_block_is_0: bool = num_blocks == 0;
-    let message_size_is_0: bool = message_size == 0;
-    if num_block_is_0 | message_size_is_0 {
-        (h, msg_block, msg_byte_ptr)
-    } else {
-        let mut last_filled_block_index = (message_size - 1) / BLOCK_SIZE;
-        let mut last_filled_block_hash_index = message_size / BLOCK_SIZE;
-        let mut blocks: [u32; N / BLOCK_SIZE * 16] = [0; N / BLOCK_SIZE * 16];
-        let mut hashes: [STATE; N / BLOCK_SIZE] = [h; N / BLOCK_SIZE];
-        let mut result_ptrs: [u32; N / BLOCK_SIZE] = [0; N / BLOCK_SIZE];
+    let mut blocks: [MSG_BLOCK; N / BLOCK_SIZE + 1] = std::mem::zeroed();
+    let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
+    states[0] = h;
 
-        for i in 0..num_blocks {
-            let msg_start = BLOCK_SIZE * i;
-            let mut (new_msg_block, new_msg_byte_ptr) =
-                // Safety: separate verification function
-                unsafe { build_msg_block(msg, message_size, msg_start) };
+    // Ensure last_filled_block_index is within bounds
+    let last_filled_block_index = min((message_size + BLOCK_SIZE - 1) / BLOCK_SIZE, num_blocks);
 
-            for j in 0..16 {
-                blocks[i * 16 + j] = new_msg_block[j];
-            }
+    let mut last_filled_block_hash_index = message_size / BLOCK_SIZE;
 
-            // Verify the block we are compressing was appropriately constructed
-            let verified_msg_byte_ptr =
-                verify_msg_block(msg, message_size, new_msg_block, msg_start);
-            // Verify that both functions agree on the number of bytes processed
-            assert_eq(
-                new_msg_byte_ptr,
-                verified_msg_byte_ptr,
-                "build_msg_block and verify_msg_block disagree on byte count",
-            );
-            result_ptrs[i] = new_msg_byte_ptr;
-            h = sha256_compression(new_msg_block, h);
-            hashes[i] = h;
-        }
+    for i in 0..num_blocks {
+        let msg_start = BLOCK_SIZE * i;
+        let mut (new_msg_block, new_msg_byte_ptr) =
+            // Safety: separate verification function
+            unsafe { build_msg_block(msg, message_size, msg_start) };
 
-        let min_num = min(last_filled_block_hash_index, num_blocks);
-        last_filled_block_hash_index = min_num;
+        blocks[i + 1] = new_msg_block;
 
-        // Ensure last_filled_block_index is within bounds
-        if last_filled_block_index >= num_blocks {
-            last_filled_block_index = num_blocks - 1;
-        }
-
-        let mut state: [u32; 8] = [0; 8];
-        if last_filled_block_hash_index == 0 {
-            state = curr;
-        } else {
-            state = hashes[last_filled_block_hash_index - 1];
-        }
-        let mut result_msg_block = [0; INT_BLOCK_SIZE];
-        for i in 0..16 {
-            result_msg_block[i] = blocks[last_filled_block_index * 16 + i];
-        }
-        let result_ptrs_index = result_ptrs[last_filled_block_index];
-        (state, result_msg_block, result_ptrs_index)
+        // Verify the block we are compressing was appropriately constructed
+        let verified_msg_byte_ptr = verify_msg_block(msg, message_size, new_msg_block, msg_start);
+        // Verify that both functions agree on the number of bytes processed
+        assert_eq(
+            new_msg_byte_ptr,
+            verified_msg_byte_ptr,
+            "build_msg_block and verify_msg_block disagree on byte count",
+        );
+        states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
+
+    let last_block_input_size = message_size % BLOCK_SIZE;
+    (states[last_filled_block_hash_index], blocks[last_filled_block_index], last_block_input_size)
 }
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start`.
