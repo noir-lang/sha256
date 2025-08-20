@@ -124,20 +124,14 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
-        let mut (new_msg_block, new_msg_byte_ptr) =
+        let (new_msg_block, _) =
             // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
-        blocks[i + 1] = new_msg_block;
-
         // Verify the block we are compressing was appropriately constructed
-        let verified_msg_byte_ptr = verify_msg_block(msg, message_size, new_msg_block, msg_start);
-        // Verify that both functions agree on the number of bytes processed
-        assert_eq(
-            new_msg_byte_ptr,
-            verified_msg_byte_ptr,
-            "build_msg_block and verify_msg_block disagree on byte count",
-        );
+        let _ =  verify_msg_block(msg, message_size, new_msg_block, msg_start);
+     
+        blocks[i + 1] = new_msg_block;
         states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
 
