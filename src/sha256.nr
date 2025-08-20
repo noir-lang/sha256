@@ -38,8 +38,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
             __sha256_var(msg, message_size)
         }
     } else {
-        let (mut h, mut msg_block) =
-            process_full_blocks(msg, message_size, INITIAL_STATE);
+        let (mut h, mut msg_block) = process_full_blocks(msg, message_size, INITIAL_STATE);
 
         finalize_sha256_blocks(msg, message_size, N, h, msg_block)
     }
@@ -181,7 +180,6 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
     // We have to project it down to 16 items and bit shifting to get a byte back if we need it.
     msg_block
 }
-
 
 // Verify the block we are compressing was appropriately constructed by `build_msg_block`
 // and matches the input data. Returns the index of the first unset item.
@@ -518,7 +516,6 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
             msg_block = new_msg_block;
         }
 
-        
         verify_msg_block(msg, message_size, msg_block, msg_start);
         if msg_start < message_size {
             verify_msg_block_padding(msg_block, msg_byte_ptr);
