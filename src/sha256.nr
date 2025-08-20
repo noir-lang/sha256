@@ -133,6 +133,8 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
     // Optimization for small messages. If the largest possible message is smaller than a block then we know that the first block is partially filled
     // no matter the value of `message_size`.
+    //
+    // Note that the condition `N >= BLOCK_SIZE` is known during monomorphization so this has no runtime cost.  
     let first_partially_filled_block_index = if N >= BLOCK_SIZE {
         message_size / BLOCK_SIZE
     } else {
