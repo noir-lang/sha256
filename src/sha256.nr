@@ -108,7 +108,7 @@ unconstrained fn __sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HA
 pub(crate) fn process_full_blocks<let N: u32>(
     msg: [u8; N],
     message_size: u32,
-    mut h: STATE,
+    h: STATE,
 ) -> (STATE, MSG_BLOCK) {
     let num_blocks = N / BLOCK_SIZE;
 
@@ -129,12 +129,11 @@ pub(crate) fn process_full_blocks<let N: u32>(
     // Similarly, we place an empty block in `blocks[N/BLOCK_SIZE]` as in the case where the `message_size == N` then the padding bits will be written to an empty block.
     let mut blocks: [MSG_BLOCK; N / BLOCK_SIZE + 1] = std::mem::zeroed();
     let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
-    states[0] = h;
 
     // Optimization for small messages. If the largest possible message is smaller than a block then we know that the first block is partially filled
     // no matter the value of `message_size`.
     //
-    // Note that the condition `N >= BLOCK_SIZE` is known during monomorphization so this has no runtime cost.  
+    // Note that the condition `N >= BLOCK_SIZE` is known during monomorphization so this has no runtime cost.
     let first_partially_filled_block_index = if N >= BLOCK_SIZE {
         message_size / BLOCK_SIZE
     } else {
@@ -157,8 +156,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
     (states[first_partially_filled_block_index], blocks[first_partially_filled_block_index])
 }
 
-// Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start`.
-// Returns the block and the length that has been copied rather than padded with zeros.
+// Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
 pub(crate) unconstrained fn build_msg_block<let N: u32>(
     msg: [u8; N],
     message_size: u32,
@@ -202,7 +200,7 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
 }
 
 // Verify the block we are compressing was appropriately constructed by `build_msg_block`
-// and matches the input data. Returns the index of the first unset item.
+// and matches the input data.
 // If `message_size` is less than `msg_start` then this is called with the old non-empty block;
 // in that case we can skip verification, ie. no need to check that everything is zero.
 fn verify_msg_block<let N: u32>(
