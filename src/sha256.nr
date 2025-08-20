@@ -116,9 +116,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
     let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
     states[0] = h;
 
-    // Ensure last_filled_block_index is within bounds
-    let last_filled_block_index = min((message_size + BLOCK_SIZE - 1) / BLOCK_SIZE, num_blocks);
-
+  
     let mut last_filled_block_hash_index = message_size / BLOCK_SIZE;
 
     for i in 0..num_blocks {
@@ -130,11 +128,11 @@ pub(crate) fn process_full_blocks<let N: u32>(
         // Verify the block we are compressing was appropriately constructed
         verify_msg_block(msg, message_size, new_msg_block, msg_start);
 
-        blocks[i + 1] = new_msg_block;
+        blocks[i] = new_msg_block;
         states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
 
-    (states[last_filled_block_hash_index], blocks[last_filled_block_index])
+    (states[last_filled_block_hash_index], blocks[last_filled_block_hash_index])
 }
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start`.
