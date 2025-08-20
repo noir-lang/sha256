@@ -116,7 +116,6 @@ pub(crate) fn process_full_blocks<let N: u32>(
     let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
     states[0] = h;
 
-  
     let mut last_filled_block_hash_index = message_size / BLOCK_SIZE;
 
     for i in 0..num_blocks {
