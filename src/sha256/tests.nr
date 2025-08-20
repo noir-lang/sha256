@@ -304,8 +304,7 @@ fn test_build_msg_block_start_0() {
     ];
     assert_eq(input.len(), 22);
     // Safety: test function
-    let (msg_block, msg_byte_ptr) = unsafe { build_msg_block(input, input.len(), 0) };
-    assert_eq(msg_byte_ptr, input.len());
+    let (msg_block) = unsafe { build_msg_block(input, input.len(), 0) };
     assert_eq(msg_block[0], make_item(input[0], input[1], input[2], input[3]));
     assert_eq(msg_block[1], make_item(input[4], input[5], input[6], input[7]));
     assert_eq(msg_block[5], make_item(input[20], input[21], 0, 0));
@@ -322,8 +321,7 @@ fn test_build_msg_block_start_1() {
     ];
     assert_eq(input.len(), 68);
     // Safety: test function
-    let (msg_block, msg_byte_ptr) = unsafe { build_msg_block(input, input.len(), 64) };
-    assert_eq(msg_byte_ptr, 4);
+    let msg_block = unsafe { build_msg_block(input, input.len(), 64) };
     assert_eq(msg_block[0], make_item(input[64], input[65], input[66], input[67]));
     assert_eq(msg_block[1], 0);
 }

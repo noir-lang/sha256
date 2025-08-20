@@ -55,7 +55,7 @@ pub(crate) unconstrained fn __sha_var<let N: u32>(
     let mut h: STATE = initial_state;
     // Pointer into msg_block on a 64 byte scale
     for i in 0..num_full_blocks {
-        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        let msg_block = build_msg_block(msg, message_size, BLOCK_SIZE * i);
         h = sha256_compression(msg_block, h);
     }
 
@@ -76,8 +76,8 @@ pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
     let (mut msg_block, mut msg_byte_ptr): (INT_BLOCK, u32) = if modulo != 0 {
         let num_full_blocks = message_size / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_full_blocks;
-        let (new_msg_block, new_msg_byte_ptr) = build_msg_block(msg, message_size, msg_start);
-        (new_msg_block, new_msg_byte_ptr)
+        let new_msg_block = build_msg_block(msg, message_size, msg_start);
+        (new_msg_block, modulo)
     } else {
         // If we had modulo == 0 then it means the last block was full,
         // and we can reset the pointer to zero to overwrite it.
@@ -124,7 +124,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
-        let (new_msg_block, _) =
+        let new_msg_block =
             // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
@@ -145,7 +145,7 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
     msg: [u8; N],
     message_size: u32,
     msg_start: u32,
-) -> (MSG_BLOCK, BLOCK_BYTE_PTR) {
+) -> MSG_BLOCK {
     let mut msg_block: MSG_BLOCK = [0; INT_BLOCK_SIZE];
 
     // We insert `BLOCK_SIZE` bytes (or up to the end of the message)
@@ -180,7 +180,7 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
 
     // Returning the index as if it was a 64 byte array.
     // We have to project it down to 16 items and bit shifting to get a byte back if we need it.
-    (msg_block, block_input)
+    msg_block
 }
 
 // Verify the block we are compressing was appropriately constructed by `build_msg_block`
@@ -514,7 +514,7 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
     if modulo != 0 {
         let num_blocks = total_len / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_blocks;
-        let (new_msg_block, new_msg_byte_ptr) =
+        let new_msg_block =
             // Safety: separate verification function
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
@@ -632,7 +632,7 @@ unconstrained fn __sha_partial_var_interstitial<let N: u32>(
     // Intermediate hash, starting with the canonical initial value
     // Pointer into msg_block on a 64 byte scale
     for i in 0..num_full_blocks {
-        let (msg_block, _) = build_msg_block(msg, message_size, BLOCK_SIZE * i);
+        let msg_block = build_msg_block(msg, message_size, BLOCK_SIZE * i);
         h = sha256_compression(msg_block, h);
     }
     h
