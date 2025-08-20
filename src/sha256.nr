@@ -126,12 +126,18 @@ pub(crate) fn process_full_blocks<let N: u32>(
     // states = [INITIAL_STATE, state after block 1, state after block 2, ..., state after block N / BLOCK_SIZE]
     //
     // We place the initial state in `states[0]` as in the case where the `message_size < BLOCK_SIZE` then there are no full blocks to process and no compressions should occur.
-    // Similarly, we place an empty block in `blocks[n/BLOCK_SIZE]` as in the case where the `message_size == N` then the padding bits will be written to an empty block. 
+    // Similarly, we place an empty block in `blocks[N/BLOCK_SIZE]` as in the case where the `message_size == N` then the padding bits will be written to an empty block.
     let mut blocks: [MSG_BLOCK; N / BLOCK_SIZE + 1] = std::mem::zeroed();
     let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
     states[0] = h;
 
-    let first_partially_filled_block_index = message_size / BLOCK_SIZE;
+    // Optimization for small messages. If the largest possible message is smaller than a block then we know that the first block is partially filled
+    // no matter the value of `message_size`.
+    let first_partially_filled_block_index = if N >= BLOCK_SIZE {
+        message_size / BLOCK_SIZE
+    } else {
+        0
+    };
 
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
