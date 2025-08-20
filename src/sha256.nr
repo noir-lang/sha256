@@ -129,8 +129,8 @@ pub(crate) fn process_full_blocks<let N: u32>(
             unsafe { build_msg_block(msg, message_size, msg_start) };
 
         // Verify the block we are compressing was appropriately constructed
-        let _ =  verify_msg_block(msg, message_size, new_msg_block, msg_start);
-     
+        let _ = verify_msg_block(msg, message_size, new_msg_block, msg_start);
+
         blocks[i + 1] = new_msg_block;
         states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
