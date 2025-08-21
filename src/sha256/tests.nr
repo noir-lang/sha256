@@ -4,6 +4,7 @@ use super::{
     set_item_zeros, sha256, sha256_var,
 };
 use super::constants::{INITIAL_STATE, INT_BLOCK};
+use super::process_full_blocks;
 
 #[export]
 fn test_sha256_1(input: [u8; 1], len: u64) -> [u8; 32] {
