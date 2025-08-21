@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/noir-lang/sha256/compare/v0.2.0...v0.2.1) (2025-08-21)
+
+
+### Features
+
+* Optimize process_full_blocks ([#32](https://github.com/noir-lang/sha256/issues/32)) ([5fb54c8](https://github.com/noir-lang/sha256/commit/5fb54c8d86d83eb62279ac78b7d246f22a66b75a))
+
 ## [0.2.0](https://github.com/noir-lang/sha256/compare/v0.1.5...v0.2.0) (2025-08-14)
 
 
