@@ -152,7 +152,6 @@ pub(crate) fn process_full_blocks<let N: u32>(
         blocks[i] = new_msg_block;
         states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
-
     // If message_size/BLOCK_SIZE == N/BLOCK_SIZE, and there is a remainder, we need to process the last block.
     if N % BLOCK_SIZE != 0 {
         let new_msg_block =
@@ -161,11 +160,15 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
         // Verify the block we are compressing was appropriately constructed
         verify_msg_block(msg, message_size, new_msg_block, BLOCK_SIZE * num_blocks);
-        verify_msg_block_zeros(new_msg_block, message_size % BLOCK_SIZE, INT_BLOCK_SIZE);
 
         blocks[num_blocks] = new_msg_block;
     }
-
+    // verify the 0 padding is correct for the last block
+    verify_msg_block_zeros(
+        blocks[first_partially_filled_block_index],
+        message_size % BLOCK_SIZE,
+        INT_BLOCK_SIZE,
+    );
     (states[first_partially_filled_block_index], blocks[first_partially_filled_block_index])
 }
 
@@ -262,11 +265,6 @@ fn verify_msg_block_zeros(
     mut msg_byte_ptr: BLOCK_BYTE_PTR,
     max_int_byte_ptr: u32,
 ) {
-    // This variable is used to get around the compiler under-constrained check giving a warning.
-    // We want to check against a constant zero, but if it does not come from the circuit inputs
-    // or return values the compiler check will issue a warning.
-    let zero = msg_block[0] - msg_block[0];
-
     // First integer which is supposed to be (partially) zero.
     let mut int_byte_ptr = msg_byte_ptr / INT_SIZE;
 
@@ -281,14 +279,14 @@ fn verify_msg_block_zeros(
         } else {
             TWO_POW_8
         };
-        assert_eq(msg_block[int_byte_ptr] % mask, zero);
+        assert_eq(msg_block[int_byte_ptr] % mask, 0);
         int_byte_ptr = int_byte_ptr + 1;
     }
 
     // Check the rest of the items.
     for i in 0..max_int_byte_ptr {
         if i >= int_byte_ptr {
-            assert_eq(msg_block[i], zero);
+            assert_eq(msg_block[i], 0);
         }
     }
 }
