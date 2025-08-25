@@ -18,10 +18,10 @@ pub fn sha224_var<let N: u32>(msg: [u8; N], message_size: u64) -> sha224_constan
             __sha224_var(msg, message_size)
         }
     } else {
-        let (mut h, mut msg_block, mut msg_byte_ptr) =
+        let (mut h, mut msg_block) =
             process_full_blocks(msg, message_size, sha224_constants::INITIAL_STATE_SHA224);
 
-        let hash: HASH = finalize_sha256_blocks(msg, message_size, N, h, msg_block, msg_byte_ptr);
+        let hash: HASH = finalize_sha256_blocks(msg, message_size, N, h, msg_block);
         // Convert 32-byte hash to 28-byte hash for SHA-224
         let mut hash_sha224: sha224_constants::HASH_SHA224 = [0; 28];
         for i in 0..28 {
