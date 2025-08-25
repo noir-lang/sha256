@@ -189,7 +189,7 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
             } else {
                 0
             };
-            msg_item = lshift8(msg_item, 1) + msg_byte as u32;
+            msg_item = (msg_item << 8) + msg_byte as u32;
         }
         msg_block[i] = msg_item;
     }
@@ -233,7 +233,7 @@ fn verify_msg_block<let N: u32>(
             }
         }
         // Shift the accumulator
-        msg_item = lshift8(msg_item, 1);
+        msg_item = msg_item << 8;
         // If we have input to consume, add it at the rightmost position.
         if k < message_size & k < msg_end {
             msg_item = msg_item + msg[k] as u32;
@@ -307,7 +307,7 @@ fn verify_msg_block_equals_last(
         // Reset to where they are still equal.
         msg_byte_ptr = msg_byte_ptr - modulo;
         for i in 0..INT_SIZE {
-            msg_item = lshift8(msg_item, 1);
+            msg_item = msg_item << 8;
             if i < modulo {
                 msg_item = msg_item + get_item_byte(last_field, msg_byte_ptr) as u32;
                 msg_byte_ptr = msg_byte_ptr + 1;
@@ -363,11 +363,13 @@ fn byte_into_item(msg_byte: u8, msg_byte_ptr: BLOCK_BYTE_PTR) -> u32 {
 #[inline_always]
 fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
     let mut item = b0 as u32;
-    item = lshift8(item, 1) + b1 as u32;
-    item = lshift8(item, 1) + b2 as u32;
-    item = lshift8(item, 1) + b3 as u32;
+    item = (item << 8) + b1 as u32;
+    item = (item << 8) + b2 as u32;
+    item = (item << 8) + b3 as u32;
     item
 }
+
+global BIT_SHIFT_TABLE: [u32; 4] = [1, TWO_POW_8, TWO_POW_16, TWO_POW_24];
 
 // Shift by 8 bits to the left between 0 and 4 times.
 // Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
@@ -382,18 +384,10 @@ fn lshift8(item: u32, shifts: u32) -> u32 {
             item << (8 * shifts)
         }
     } else {
-        // We can do a for loop up to INT_SIZE or an if-else.
-        if shifts == 0 {
-            item
-        } else if shifts == 1 {
-            item * TWO_POW_8
-        } else if shifts == 2 {
-            item * TWO_POW_16
-        } else if shifts == 3 {
-            item * TWO_POW_24
-        } else {
-            // Doesn't make sense, but it's most likely called on 0 anyway.
+        if shifts == 4 {
             0
+        } else {
+            item * BIT_SHIFT_TABLE[shifts]
         }
     }
 }
@@ -404,23 +398,16 @@ fn lshift8(item: u32, shifts: u32) -> u32 {
 #[inline_always]
 fn rshift8(item: u32, shifts: u32) -> u32 {
     if is_unconstrained() {
-        if 8 * shifts >= 32 {
+        if shifts >= 4 {
             0
         } else {
             item >> (8 * shifts)
         }
     } else {
-        // Division wouldn't work on `Field`.
-        if shifts == 0 {
-            item
-        } else if shifts == 1 {
-            item / TWO_POW_8
-        } else if shifts == 2 {
-            item / TWO_POW_16
-        } else if shifts == 3 {
-            item / TWO_POW_24
-        } else {
+        if shifts == 4 {
             0
+        } else {
+            item / BIT_SHIFT_TABLE[shifts]
         }
     }
 }
