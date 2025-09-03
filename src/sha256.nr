@@ -163,14 +163,10 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
         blocks[num_blocks] = new_msg_block;
     }
-    
+
     // verify the 0 padding is correct for the last block
-    let final_block = blocks[first_partially_filled_block_index]; 
-    verify_msg_block_zeros(
-        final_block,
-        message_size % BLOCK_SIZE,
-        INT_BLOCK_SIZE,
-    );
+    let final_block = blocks[first_partially_filled_block_index];
+    verify_msg_block_zeros(final_block, message_size % BLOCK_SIZE, INT_BLOCK_SIZE);
     (states[first_partially_filled_block_index], final_block)
 }
 
