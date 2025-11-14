@@ -39,7 +39,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
     } else {
         let (mut h, mut msg_block) = process_full_blocks(msg, message_size, INITIAL_STATE);
 
-        finalize_sha256_blocks(msg, message_size, N, h, msg_block)
+        finalize_sha256_blocks::<N>(message_size, h, msg_block)
     }
 }
 
@@ -119,14 +119,14 @@ pub(crate) fn process_full_blocks<let N: u32>(
     // Consider a message with an unknown number of bytes, `msg_size. It can be seen that this will have `msg_size / BLOCK_SIZE` full blocks.
     // - `states[i]` should then be the state after processing the first `i` blocks.
     // - `blocks[i]` should then be the next message block after processing the first `i` blocks.
+    // blocks[first_partially_filled_block_index] is the last block that is partially filled or all 0 if the message is a multiple of the block size.
     //
     // In other words:
     //
-    // blocks = [block 1, block 2, ..., block N / BLOCK_SIZE, empty block]
+    // blocks = [block 1, block 2, ..., block N / BLOCK_SIZE, block N / BLOCK_SIZE + 1]
     // states = [INITIAL_STATE, state after block 1, state after block 2, ..., state after block N / BLOCK_SIZE]
     //
     // We place the initial state in `states[0]` as in the case where the `message_size < BLOCK_SIZE` then there are no full blocks to process and no compressions should occur.
-    // Similarly, we place an empty block in `blocks[N/BLOCK_SIZE]` as in the case where the `message_size == N` then the padding bits will be written to an empty block.
     let mut blocks: [MSG_BLOCK; N / BLOCK_SIZE + 1] = std::mem::zeroed();
     let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
 
@@ -152,8 +152,22 @@ pub(crate) fn process_full_blocks<let N: u32>(
         blocks[i] = new_msg_block;
         states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
+    // If message_size/BLOCK_SIZE == N/BLOCK_SIZE, and there is a remainder, we need to process the last block.
+    if N % BLOCK_SIZE != 0 {
+        let new_msg_block =
+            // Safety: separate verification function
+            unsafe { build_msg_block(msg, message_size, BLOCK_SIZE * num_blocks) };
 
-    (states[first_partially_filled_block_index], blocks[first_partially_filled_block_index])
+        // Verify the block we are compressing was appropriately constructed
+        verify_msg_block(msg, message_size, new_msg_block, BLOCK_SIZE * num_blocks);
+
+        blocks[num_blocks] = new_msg_block;
+    }
+
+    // verify the 0 padding is correct for the last block
+    let final_block = blocks[first_partially_filled_block_index];
+    verify_msg_block_zeros(final_block, message_size % BLOCK_SIZE, INT_BLOCK_SIZE);
+    (states[first_partially_filled_block_index], final_block)
 }
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
@@ -241,13 +255,6 @@ fn verify_msg_block<let N: u32>(
     }
 }
 
-// Verify the block we are compressing was appropriately padded with zeros by `build_msg_block`.
-// This is only relevant for the last, potentially partially filled block.
-fn verify_msg_block_padding(msg_block: MSG_BLOCK, msg_byte_ptr: BLOCK_BYTE_PTR) {
-    // Check all the way to the end of the block.
-    verify_msg_block_zeros(msg_block, msg_byte_ptr, INT_BLOCK_SIZE);
-}
-
 // Verify that a region of ints in the message block are (partially) zeroed,
 // up to an (exclusive) maximum which can either be the end of the block
 // or just where the size is to be written.
@@ -256,11 +263,6 @@ fn verify_msg_block_zeros(
     mut msg_byte_ptr: BLOCK_BYTE_PTR,
     max_int_byte_ptr: u32,
 ) {
-    // This variable is used to get around the compiler under-constrained check giving a warning.
-    // We want to check against a constant zero, but if it does not come from the circuit inputs
-    // or return values the compiler check will issue a warning.
-    let zero = msg_block[0] - msg_block[0];
-
     // First integer which is supposed to be (partially) zero.
     let mut int_byte_ptr = msg_byte_ptr / INT_SIZE;
 
@@ -275,14 +277,14 @@ fn verify_msg_block_zeros(
         } else {
             TWO_POW_8
         };
-        assert_eq(msg_block[int_byte_ptr] % mask, zero);
+        assert_eq(msg_block[int_byte_ptr] % mask, 0);
         int_byte_ptr = int_byte_ptr + 1;
     }
 
     // Check the rest of the items.
     for i in 0..max_int_byte_ptr {
         if i >= int_byte_ptr {
-            assert_eq(msg_block[i], zero);
+            assert_eq(msg_block[i], 0);
         }
     }
 }
@@ -499,33 +501,11 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
 }
 
 pub(crate) fn finalize_sha256_blocks<let N: u32>(
-    msg: [u8; N],
     message_size: u32,
-    total_len: u32,
     mut h: STATE,
     mut msg_block: MSG_BLOCK,
 ) -> HASH {
     let mut msg_byte_ptr = message_size % BLOCK_SIZE;
-    let modulo = total_len % BLOCK_SIZE;
-    // Handle setup of the final msg block.
-    // This case is only hit if the msg is less than the block size,
-    // or our message cannot be evenly split into blocks.
-    if modulo != 0 {
-        let num_blocks = total_len / BLOCK_SIZE;
-        let msg_start = BLOCK_SIZE * num_blocks;
-        let new_msg_block =
-            // Safety: separate verification function
-            unsafe { build_msg_block(msg, message_size, msg_start) };
-
-        if msg_start < message_size {
-            msg_block = new_msg_block;
-        }
-
-        verify_msg_block(msg, message_size, msg_block, msg_start);
-        if msg_start < message_size {
-            verify_msg_block_padding(msg_block, msg_byte_ptr);
-        }
-    }
 
     // If we had modulo == 0 then it means the last block was full,
     // and we can reset the pointer to zero to overwrite it.
@@ -617,7 +597,7 @@ pub fn partial_sha256_var_end<let N: u32>(
         }
     } else {
         let (mut h, mut msg_block) = process_full_blocks(msg, message_size, h);
-        finalize_sha256_blocks(msg, real_message_size, N, h, msg_block)
+        finalize_sha256_blocks::<N>(real_message_size, h, msg_block)
     }
 }
 
