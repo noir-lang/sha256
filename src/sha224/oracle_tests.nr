@@ -11,7 +11,7 @@ unconstrained fn get_sha224_hash(input: [u8]) -> [u8; 28] {
 #[test]
 unconstrained fn test_sha224_1(input: [u8; 1]) {
     // get hash from Noir implementation
-    let noir_hash = sha224_var(input, input.len() as u64);
+    let noir_hash = sha224_var(input, input.len());
 
     // get hash from typescript implementation
     let ts_hash = get_sha224_hash(input);
@@ -22,7 +22,7 @@ unconstrained fn test_sha224_1(input: [u8; 1]) {
 #[test]
 unconstrained fn test_sha224_63(input: [u8; 63]) {
     // get hash from Noir implementation
-    let noir_hash = sha224_var(input, input.len() as u64);
+    let noir_hash = sha224_var(input, input.len());
 
     // get hash from typescript implementation
     let ts_hash = get_sha224_hash(input);
@@ -33,7 +33,7 @@ unconstrained fn test_sha224_63(input: [u8; 63]) {
 #[test]
 unconstrained fn test_sha224_511(input: [u8; 511]) {
     // get hash from Noir implementation
-    let noir_hash = sha224_var(input, input.len() as u64);
+    let noir_hash = sha224_var(input, input.len());
 
     // get hash from typescript implementation
     let ts_hash = get_sha224_hash(input);
@@ -44,7 +44,7 @@ unconstrained fn test_sha224_511(input: [u8; 511]) {
 #[test]
 unconstrained fn test_sha224_512(input: [u8; 512]) {
     // get hash from Noir implementation
-    let noir_hash = sha224_var(input, input.len() as u64);
+    let noir_hash = sha224_var(input, input.len());
 
     // get hash from typescript implementation
     let ts_hash = get_sha224_hash(input);
