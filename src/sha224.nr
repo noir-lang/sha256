@@ -6,6 +6,7 @@ use constants as sha224_constants;
 
 pub(crate) mod constants;
 mod tests;
+mod oracle_tests;
 
 // Variable size SHA-224 hash
 pub fn sha224_var<let N: u32>(msg: [u8; N], message_size: u64) -> sha224_constants::HASH_SHA224 {
