@@ -23,12 +23,11 @@ pub fn sha256<let N: u32>(input: [u8; N]) -> HASH
 // SHA-256 hash function
 #[no_predicates]
 pub fn digest<let N: u32>(msg: [u8; N]) -> HASH {
-    sha256_var(msg, N as u64)
+    sha256_var(msg, N)
 }
 
 // Variable size SHA-256 hash
-pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u64) -> HASH {
-    let message_size = message_size as u32;
+pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HASH {
     assert(message_size <= N);
 
     if std::runtime::is_unconstrained() {
@@ -260,7 +259,7 @@ fn verify_msg_block<let N: u32>(
 // or just where the size is to be written.
 fn verify_msg_block_zeros(
     msg_block: MSG_BLOCK,
-    mut msg_byte_ptr: BLOCK_BYTE_PTR,
+    msg_byte_ptr: BLOCK_BYTE_PTR,
     max_int_byte_ptr: u32,
 ) {
     // First integer which is supposed to be (partially) zero.
@@ -485,11 +484,11 @@ fn verify_msg_len(
 
 // Perform the final compression, then transform the `STATE` into `HASH`.
 fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
-    let mut out_h: HASH = [0; 32]; // Digest as sequence of bytes
     // Hash final padded block
     state = sha256_compression(msg_block, state);
 
     // Return final hash as byte array
+    let mut out_h: HASH = [0; 32]; // Digest as sequence of bytes
     for j in 0..8 {
         let h_bytes: [u8; 4] = (state[j] as Field).to_be_bytes();
         for k in 0..4 {
@@ -619,10 +618,10 @@ unconstrained fn __sha_partial_var_interstitial<let N: u32>(
 mod equivalence_test {
 
     #[test]
-    fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
+    fn test_implementations_agree(msg: [u8; 100], message_size: u32) {
         let message_size = message_size % 100;
         // Safety: test function
-        let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size as u32) };
+        let unconstrained_sha = unsafe { super::__sha256_var(msg, message_size) };
         let sha = super::sha256_var(msg, message_size);
         assert_eq(sha, unconstrained_sha);
     }

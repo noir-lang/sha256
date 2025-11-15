@@ -9,7 +9,7 @@ fn empty_sha224() {
         0xd1, 0x4a, 0x02, 0x8c, 0x2a, 0x3a, 0x2b, 0xc9, 0x47, 0x61, 0x02, 0xbb, 0x28, 0x82, 0x34,
         0xc4, 0x15, 0xa2, 0xb0, 0x1f, 0x82, 0x8e, 0xa6, 0x2a, 0xc5, 0xb3, 0xe4, 0x2f,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn msg_just_over_block_sha224() {
         150, 14, 160, 186, 70, 211, 123, 220, 168, 249, 39, 26, 193, 231, 184, 35, 255, 13, 53, 98,
         111, 178, 115, 23, 167, 7, 93, 41,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn msg_multiple_over_block_sha224() {
         170, 28, 127, 29, 154, 66, 50, 175, 185, 141, 168, 5, 242, 148, 233, 184, 215, 240, 92, 85,
         227, 86, 112, 84, 190, 124, 74, 152,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn smoke_test_sha224() {
         0xb1, 0xe4, 0x6b, 0xb9, 0xef, 0xe4, 0x5a, 0xf5, 0x54, 0x36, 0x34, 0x49, 0xc6, 0x94, 0x5a,
         0x0d, 0x61, 0x69, 0xfc, 0x3a, 0x5a, 0x39, 0x6a, 0x56, 0xcb, 0x97, 0xcb, 0x57,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn msg_just_under_block_sha224() {
         134, 250, 131, 194, 116, 121, 209, 110, 82, 35, 45, 92, 218, 132, 49, 39, 58, 40, 58, 212,
         59, 246, 163, 69, 252, 114, 19, 17,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn msg_big_not_block_multiple() {
         240, 237, 233, 117, 31, 133, 136, 125, 9, 248, 193, 98, 207, 74, 21, 25, 71, 84, 41, 97,
         219, 153, 164, 62, 223, 169, 124, 37,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -180,7 +180,7 @@ fn msg_big_no_padding() {
         186, 236, 174, 87, 162, 35, 146, 29, 161, 143, 250, 157, 246, 199, 44, 232, 63, 230, 53, 8,
         153, 121, 231, 12, 184, 77, 138, 20,
     ];
-    assert_eq(sha224_var(input, input.len() as u64), result);
+    assert_eq(sha224_var(input, input.len()), result);
 }
 
 #[test]
@@ -224,11 +224,11 @@ fn same_msg_len_variable_padding() {
     }
 
     // Compute hashes of all inputs (with same message length)
-    let var_full_length_hash = sha224_var(input, input.len() as u64);
-    let var_length_hash_511 = sha224_var(input_511, input.len() as u64);
-    let var_length_hash_512 = sha224_var(input_512, input.len() as u64);
-    let var_length_hash_575 = sha224_var(input_575, input.len() as u64);
-    let var_length_hash_576 = sha224_var(input_576, input.len() as u64);
+    let var_full_length_hash = sha224_var(input, input.len());
+    let var_length_hash_511 = sha224_var(input_511, input.len());
+    let var_length_hash_512 = sha224_var(input_512, input.len());
+    let var_length_hash_575 = sha224_var(input_575, input.len());
+    let var_length_hash_576 = sha224_var(input_576, input.len());
 
     // All of the above should have produced the same hash
     assert_eq(var_length_hash_511, var_full_length_hash);
@@ -249,7 +249,7 @@ fn fuzz_test_partial_hash_sha224(data: [u8; 192]) {
     }
     let state = partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 128);
     let hash = partial_sha224_var_end(state, data1, data1.len(), data.len());
-    let correct_hash = sha224_var(data, data.len() as u64);
+    let correct_hash = sha224_var(data, data.len());
     assert_eq(hash, correct_hash);
 }
 
@@ -267,7 +267,7 @@ fn fuzz_test_partial_hash_interstitial_sha224(data: [u8; 192]) {
         partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 64);
     let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
     let hash = partial_sha224_var_end(interstitial_hash, data2, data2.len(), data.len());
-    let correct_hash = sha224_var(data, data.len() as u64);
+    let correct_hash = sha224_var(data, data.len());
     assert_eq(hash, correct_hash);
 }
 
@@ -285,6 +285,6 @@ fn fuzz_test_partial_hash_end_sha224(data: [u8; 192]) {
         partial_sha256_var_interstitial(sha224_constants::INITIAL_STATE_SHA224, data0, 64);
     let interstitial_hash = partial_sha256_var_interstitial(pre_hash, data1, 64);
     let hash = partial_sha224_var_end(interstitial_hash, data2, data2.len(), data.len());
-    let correct_hash = sha224_var(data, data.len() as u64);
+    let correct_hash = sha224_var(data, data.len());
     assert_eq(hash, correct_hash);
 }
