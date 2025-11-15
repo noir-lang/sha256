@@ -9,8 +9,7 @@ mod tests;
 mod oracle_tests;
 
 // Variable size SHA-224 hash
-pub fn sha224_var<let N: u32>(msg: [u8; N], message_size: u64) -> sha224_constants::HASH_SHA224 {
-    let message_size = message_size as u32;
+pub fn sha224_var<let N: u32>(msg: [u8; N], message_size: u32) -> sha224_constants::HASH_SHA224 {
     assert(message_size <= N);
 
     if std::runtime::is_unconstrained() {
@@ -73,10 +72,10 @@ pub fn partial_sha224_var_end<let N: u32>(
 mod equivalence_test {
 
     #[test]
-    fn test_implementations_agree(msg: [u8; 100], message_size: u64) {
+    fn test_implementations_agree(msg: [u8; 100], message_size: u32) {
         let message_size = message_size % 100;
         // Safety: testing
-        let unconstrained_sha224 = unsafe { super::__sha224_var(msg, message_size as u32) };
+        let unconstrained_sha224 = unsafe { super::__sha224_var(msg, message_size) };
         let sha224 = super::sha224_var(msg, message_size);
         assert_eq(sha224, unconstrained_sha224);
     }
