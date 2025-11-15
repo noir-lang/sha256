@@ -8,6 +8,7 @@ use constants::{
 
 pub(crate) mod constants;
 mod tests;
+mod oracle_tests;
 
 // Implementation of SHA-256 mapping a byte array of variable length to
 // 32 bytes.
@@ -240,6 +241,7 @@ fn verify_msg_block<let N: u32>(
         if k % INT_SIZE == 0 {
             // If we consumed some input we can compare against the block.
             if (msg_start < message_size) & (k > msg_start) {
+                println(f"i is {i}");
                 assert_eq(msg_block[i], msg_item as u32);
                 i = i + 1;
                 msg_item = 0;
