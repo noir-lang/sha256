@@ -246,12 +246,10 @@ fn verify_msg_block<let N: u32>(
 
             msg_item = 0;
         }
-        // Shift the accumulator
-        msg_item = msg_item << 8;
+
         // If we have input to consume, add it at the rightmost position.
-        if k < max_read_index {
-            msg_item = msg_item + msg[k] as u32;
-        }
+        let msg_byte = if k < max_read_index { msg[k] } else { 0 };
+        msg_item = (msg_item << 8) + msg_byte as u32;
     }
 }
 
