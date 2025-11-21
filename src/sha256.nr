@@ -142,24 +142,14 @@ pub(crate) fn process_full_blocks<let N: u32>(
 
     for i in 0..num_blocks {
         let msg_start = BLOCK_SIZE * i;
-        let new_msg_block =
-            // Safety: separate verification function
-            unsafe { build_msg_block(msg, message_size, msg_start) };
-
-        // Verify the block we are compressing was appropriately constructed
-        verify_msg_block(msg, message_size, new_msg_block, msg_start);
+        let new_msg_block = build_msg_block(msg, message_size, msg_start);
 
         blocks[i] = new_msg_block;
         states[i + 1] = sha256_compression(new_msg_block, states[i]);
     }
     // If message_size/BLOCK_SIZE == N/BLOCK_SIZE, and there is a remainder, we need to process the last block.
     if N % BLOCK_SIZE != 0 {
-        let new_msg_block =
-            // Safety: separate verification function
-            unsafe { build_msg_block(msg, message_size, BLOCK_SIZE * num_blocks) };
-
-        // Verify the block we are compressing was appropriately constructed
-        verify_msg_block(msg, message_size, new_msg_block, BLOCK_SIZE * num_blocks);
+        let new_msg_block = build_msg_block(msg, message_size, BLOCK_SIZE * num_blocks);
 
         blocks[num_blocks] = new_msg_block;
     }
@@ -171,7 +161,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
 }
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
-pub(crate) unconstrained fn build_msg_block<let N: u32>(
+pub(crate) unconstrained fn build_msg_block_helper<let N: u32>(
     msg: [u8; N],
     message_size: u32,
     msg_start: u32,
@@ -213,44 +203,46 @@ pub(crate) unconstrained fn build_msg_block<let N: u32>(
     msg_block
 }
 
-// Verify the block we are compressing was appropriately constructed by `build_msg_block`
-// and matches the input data.
+// Build a message block from the input message starting at `msg_start`.
+//
 // If `message_size` is less than `msg_start` then this is called with the old non-empty block;
 // in that case we can skip verification, ie. no need to check that everything is zero.
-fn verify_msg_block<let N: u32>(
-    msg: [u8; N],
-    message_size: u32,
-    msg_block: MSG_BLOCK,
-    msg_start: u32,
-) {
-    let mut msg_end = msg_start + BLOCK_SIZE;
-    if msg_end > N {
-        msg_end = N;
-    }
-    // We might have to go beyond the input to pad the fields.
-    if msg_end % INT_SIZE != 0 {
-        msg_end = msg_end + INT_SIZE - msg_end % INT_SIZE;
-    }
+fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) -> MSG_BLOCK {
+    let msg_block =
+        // Safety: We constrain the block below by reconstructing each `u32` word from the input bytes.
+        unsafe { build_msg_block_helper(msg, message_size, msg_start) };
 
-    let max_read_index = std::cmp::min(message_size, msg_end);
-
-    // Reconstructed packed item.
-    let mut msg_item: u32 = 0;
-
-    // Inclusive at the end so that we can compare the last item.
-    for k in msg_start..=msg_end {
-        if (k != msg_start) & (k % INT_SIZE == 0) {
-            // If we consumed some input we can compare against the block.
-            let msg_block_index = (k - msg_start) / INT_SIZE - 1;
-            assert_eq(msg_block[msg_block_index], msg_item);
-
-            msg_item = 0;
+    if !is_unconstrained() {
+        let mut msg_end = msg_start + BLOCK_SIZE;
+        if msg_end > N {
+            msg_end = N;
+        }
+        // We might have to go beyond the input to pad the fields.
+        if msg_end % INT_SIZE != 0 {
+            msg_end = msg_end + INT_SIZE - msg_end % INT_SIZE;
         }
 
-        // If we have input to consume, add it at the rightmost position.
-        let msg_byte = if k < max_read_index { msg[k] } else { 0 };
-        msg_item = (msg_item << 8) + msg_byte as u32;
+        let max_read_index = std::cmp::min(message_size, msg_end);
+
+        // Reconstructed packed item.
+        let mut msg_item: u32 = 0;
+
+        // Inclusive at the end so that we can compare the last item.
+        for k in msg_start..=msg_end {
+            if (k != msg_start) & (k % INT_SIZE == 0) {
+                // If we consumed some input we can compare against the block.
+                let msg_block_index = (k - msg_start) / INT_SIZE - 1;
+                assert_eq(msg_block[msg_block_index], msg_item);
+
+                msg_item = 0;
+            }
+
+            // If we have input to consume, add it at the rightmost position.
+            let msg_byte = if k < max_read_index { msg[k] } else { 0 };
+            msg_item = (msg_item << 8) + msg_byte as u32;
+        }
     }
+    msg_block
 }
 
 // Verify that a region of ints in the message block are (partially) zeroed,
