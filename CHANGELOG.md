@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/noir-lang/sha256/compare/v0.2.1...v0.3.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* change length argument to be u32 ([#38](https://github.com/noir-lang/sha256/issues/38))
+
+### Miscellaneous Chores
+
+* Change length argument to be u32 ([#38](https://github.com/noir-lang/sha256/issues/38)) ([c204b60](https://github.com/noir-lang/sha256/commit/c204b60dca6236538a0ccaa35578b635c4a74730))
+
 ## [0.2.1](https://github.com/noir-lang/sha256/compare/v0.2.0...v0.2.1) (2025-09-03)
 
 
