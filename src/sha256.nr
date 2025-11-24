@@ -222,29 +222,26 @@ fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) 
             msg_end = msg_end + INT_SIZE - msg_end % INT_SIZE;
         }
 
+        let max_read_index = std::cmp::min(message_size, msg_end);
+
         // Reconstructed packed item.
         let mut msg_item: u32 = 0;
 
         // Inclusive at the end so that we can compare the last item.
-        let mut i: u32 = 0;
         for k in msg_start..=msg_end {
-            if k % INT_SIZE == 0 {
+            if (k != msg_start) & (k % INT_SIZE == 0) {
                 // If we consumed some input we can compare against the block.
-                if (msg_start < message_size) & (k > msg_start) {
-                    assert_eq(msg_block[i], msg_item as u32);
-                    i = i + 1;
-                    msg_item = 0;
-                }
+                let msg_block_index = (k - msg_start) / INT_SIZE - 1;
+                assert_eq(msg_block[msg_block_index], msg_item);
+
+                msg_item = 0;
             }
-            // Shift the accumulator
-            msg_item = msg_item << 8;
+
             // If we have input to consume, add it at the rightmost position.
-            if k < message_size & k < msg_end {
-                msg_item = msg_item + msg[k] as u32;
-            }
+            let msg_byte = if k < max_read_index { msg[k] } else { 0 };
+            msg_item = (msg_item << 8) + msg_byte as u32;
         }
     }
-
     msg_block
 }
 
