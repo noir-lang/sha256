@@ -154,8 +154,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
         blocks[num_blocks] = new_msg_block;
     }
 
-    let final_block = blocks[first_partially_filled_block_index];
-    (states[first_partially_filled_block_index], final_block)
+    (states[first_partially_filled_block_index], blocks[first_partially_filled_block_index])
 }
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
