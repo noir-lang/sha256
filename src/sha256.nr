@@ -82,19 +82,7 @@ pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
         ([0; INT_BLOCK_SIZE], 0)
     };
 
-    // Pad the rest such that we have a [u32; 2] block at the end representing the length
-    // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
-    // Here we rely on the fact that everything beyond the available input is set to 0.
-    let index = msg_byte_ptr / INT_SIZE;
-    msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
-
-    // If we don't have room to write the size, compress the block and reset it.
-    if msg_byte_ptr >= MSG_SIZE_PTR {
-        h = sha256_compression(msg_block, h);
-        // In this case, the final block consists of all zeros with the last 8 bytes containing the length.
-        // We set msg_block to all zeros and attach_len_to_msg_block will add the length to the last 8 bytes.
-        msg_block = [0; INT_BLOCK_SIZE];
-    }
+    let mut (h, msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
 
     msg_block = attach_len_to_msg_block(msg_block, message_size);
 
@@ -361,13 +349,13 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
     out_h
 }
 
-pub(crate) fn finalize_sha256_blocks<let N: u32>(
-    message_size: u32,
-    mut h: STATE,
+// Add 1 bit padding to end of message and compress the block if there's not enough room for the 8-byte length.
+// Returns the updated hash state and message block that will be used to write the message size.
+fn add_padding_byte_and_compress_if_needed(
     mut msg_block: MSG_BLOCK,
-) -> HASH {
-    let mut msg_byte_ptr = message_size % BLOCK_SIZE;
-
+    msg_byte_ptr: BLOCK_BYTE_PTR,
+    mut h: STATE,
+) -> (STATE, MSG_BLOCK) {
     // Pad the rest such that we have a [u32; 2] block at the end representing the length
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
     // Here we rely on the fact that everything beyond the available input is set to 0.
@@ -383,6 +371,17 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
         msg_block = [0; INT_BLOCK_SIZE];
     }
 
+    (h, msg_block)
+}
+
+pub(crate) fn finalize_sha256_blocks<let N: u32>(
+    message_size: u32,
+    mut h: STATE,
+    mut msg_block: MSG_BLOCK,
+) -> HASH {
+    let msg_byte_ptr = message_size % BLOCK_SIZE;
+
+    let mut (h, msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
     let last_block = msg_block;
 
     // Safety: separate verification function
