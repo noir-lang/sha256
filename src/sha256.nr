@@ -154,10 +154,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
         blocks[num_blocks] = new_msg_block;
     }
 
-    // verify the 0 padding is correct for the last block
-    let final_block = blocks[first_partially_filled_block_index];
-    verify_msg_block_zeros(final_block, message_size % BLOCK_SIZE, INT_BLOCK_SIZE);
-    (states[first_partially_filled_block_index], final_block)
+    (states[first_partially_filled_block_index], blocks[first_partially_filled_block_index])
 }
 
 // Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
@@ -214,13 +211,6 @@ fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) 
 
     if !is_unconstrained() {
         let mut msg_end = msg_start + BLOCK_SIZE;
-        if msg_end > N {
-            msg_end = N;
-        }
-        // We might have to go beyond the input to pad the fields.
-        if msg_end % INT_SIZE != 0 {
-            msg_end = msg_end + INT_SIZE - msg_end % INT_SIZE;
-        }
 
         let max_read_index = std::cmp::min(message_size, msg_end);
 
