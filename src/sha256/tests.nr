@@ -304,7 +304,7 @@ fn test_build_msg_block_start_0() {
     ];
     assert_eq(input.len(), 22);
     // Safety: test function
-    let (msg_block) = unsafe { build_msg_block(input, input.len(), 0) };
+    let (msg_block) = build_msg_block(input, input.len(), 0);
     assert_eq(msg_block[0], make_item(input[0], input[1], input[2], input[3]));
     assert_eq(msg_block[1], make_item(input[4], input[5], input[6], input[7]));
     assert_eq(msg_block[5], make_item(input[20], input[21], 0, 0));
@@ -321,23 +321,23 @@ fn test_build_msg_block_start_1() {
     ];
     assert_eq(input.len(), 68);
     // Safety: test function
-    let msg_block = unsafe { build_msg_block(input, input.len(), 64) };
+    let msg_block = build_msg_block(input, input.len(), 64);
     assert_eq(msg_block[0], make_item(input[64], input[65], input[66], input[67]));
     assert_eq(msg_block[1], 0);
 }
 
 #[test]
+// last 8 bytes of msg_block for message_size = 1 is 00 00 00 00 00 00 00 08
 fn test_attach_len_to_msg_block() {
-    let input: INT_BLOCK = [
-        2152555847, 1397309779, 1936618851, 1262052426, 1936876331, 1985297723, 543702374,
-        1919905082, 1131376244, 1701737517, 1417244773, 978151789, 1697470053, 1920166255,
-        1849316213, 1651139939,
-    ];
+    let input: INT_BLOCK =
+        [2152555847, 1397309779, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1849316213, 1651139939];
     // Safety: test function
-    let msg_block = unsafe { attach_len_to_msg_block(input, 1, 448) };
-    assert_eq(msg_block[0], ((1 << 7) as u32) * 256 * 256 * 256);
-    assert_eq(msg_block[1], 0);
-    assert_eq(msg_block[15], 3584);
+    let msg_block = unsafe { attach_len_to_msg_block(input, 1) };
+    for i in 0..14 {
+        assert_eq(msg_block[i], input[i]);
+    }
+    assert_eq(msg_block[14], 0);
+    assert_eq(msg_block[15], 8);
 }
 
 #[test]

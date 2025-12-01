@@ -89,13 +89,14 @@ pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
     msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
 
     // If we don't have room to write the size, compress the block and reset it.
-    let (h, mut msg_byte_ptr): (STATE, u32) = if msg_byte_ptr >= MSG_SIZE_PTR {
-        // `attach_len_to_msg_block` will zero out everything after the `msg_byte_ptr`.
-        (sha256_compression(msg_block, h), 0)
-    } else {
-        (h, msg_byte_ptr + 1)
-    };
-    msg_block = attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size);
+    if msg_byte_ptr >= MSG_SIZE_PTR {
+        h = sha256_compression(msg_block, h);
+        // In this case, the final block consists of all zeros with the last 8 bytes containing the length.
+        // We set msg_block to all zeros and attach_len_to_msg_block will add the length to the last 8 bytes.
+        msg_block = [0; INT_BLOCK_SIZE];
+    }
+
+    msg_block = attach_len_to_msg_block(msg_block, message_size);
 
     hash_final_block(msg_block, h)
 }
@@ -236,76 +237,6 @@ fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) 
     msg_block
 }
 
-// Verify that a region of ints in the message block are (partially) zeroed,
-// up to an (exclusive) maximum which can either be the end of the block
-// or just where the size is to be written.
-fn verify_msg_block_zeros(
-    msg_block: MSG_BLOCK,
-    msg_byte_ptr: BLOCK_BYTE_PTR,
-    max_int_byte_ptr: u32,
-) {
-    // First integer which is supposed to be (partially) zero.
-    let mut int_byte_ptr = msg_byte_ptr / INT_SIZE;
-
-    // Check partial zeros.
-    let modulo = msg_byte_ptr % INT_SIZE;
-    if modulo != 0 {
-        let zeros = INT_SIZE - modulo;
-        let mask = if zeros == 3 {
-            TWO_POW_24
-        } else if zeros == 2 {
-            TWO_POW_16
-        } else {
-            TWO_POW_8
-        };
-        assert_eq(msg_block[int_byte_ptr] % mask, 0);
-        int_byte_ptr = int_byte_ptr + 1;
-    }
-
-    // Check the rest of the items.
-    for i in 0..max_int_byte_ptr {
-        if i >= int_byte_ptr {
-            assert_eq(msg_block[i], 0);
-        }
-    }
-}
-
-// Verify that up to the byte pointer the two blocks are equal.
-// At the byte pointer the new block can be partially zeroed.
-fn verify_msg_block_equals_last(
-    msg_block: MSG_BLOCK,
-    last_block: MSG_BLOCK,
-    mut msg_byte_ptr: BLOCK_BYTE_PTR,
-) {
-    // msg_byte_ptr is the position at which they are no longer have to be the same.
-    // First integer which is supposed to be (partially) zero contains that pointer.
-    let mut int_byte_ptr = msg_byte_ptr / INT_SIZE;
-
-    // Check partial zeros.
-    let modulo = msg_byte_ptr % INT_SIZE;
-    if modulo != 0 {
-        // Reconstruct the partially zero item from the last block.
-        let last_field = last_block[int_byte_ptr];
-        let mut msg_item: u32 = 0;
-        // Reset to where they are still equal.
-        msg_byte_ptr = msg_byte_ptr - modulo;
-        for i in 0..INT_SIZE {
-            msg_item = msg_item << 8;
-            if i < modulo {
-                msg_item = msg_item + get_item_byte(last_field, msg_byte_ptr) as u32;
-                msg_byte_ptr = msg_byte_ptr + 1;
-            }
-        }
-        assert_eq(msg_block[int_byte_ptr], msg_item);
-    }
-
-    for i in 0..INT_SIZE_PTR {
-        if i < int_byte_ptr {
-            assert_eq(msg_block[i], last_block[i]);
-        }
-    }
-}
-
 // Set the rightmost `zeros` number of bytes to 0.
 #[inline_always]
 fn set_item_zeros(item: u32, zeros: u32) -> u32 {
@@ -395,30 +326,8 @@ fn rshift8(item: u32, shifts: u32) -> u32 {
     }
 }
 
-// Zero out all bytes between the end of the message and where the length is appended,
-// then write the length into the last 8 bytes of the block.
-unconstrained fn attach_len_to_msg_block(
-    mut msg_block: MSG_BLOCK,
-    mut msg_byte_ptr: BLOCK_BYTE_PTR,
-    message_size: u32,
-) -> MSG_BLOCK {
-    // We assume that `msg_byte_ptr` is less than 57 because if not then it is reset to zero before calling this function.
-    // In any case, fill blocks up with zeros until the last 64 bits (i.e. until msg_byte_ptr = 56).
-    // There can be one item which has to be partially zeroed.
-    let modulo = msg_byte_ptr % INT_SIZE;
-    if modulo != 0 {
-        // Index of the block in which we find the item we need to partially zero.
-        let i = msg_byte_ptr / INT_SIZE;
-        let zeros = INT_SIZE - modulo;
-        msg_block[i] = set_item_zeros(msg_block[i], zeros);
-        msg_byte_ptr = msg_byte_ptr + zeros;
-    }
-
-    // The rest can be zeroed without bit shifting anything.
-    for i in (msg_byte_ptr / INT_SIZE)..INT_SIZE_PTR {
-        msg_block[i] = 0;
-    }
-
+// Write the length into the last 8 bytes of the block.
+unconstrained fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
     // Set the last two 4 byte ints as the first/second half of the 8 bytes of the length.
     let len = 8 * message_size;
     let len_bytes: [u8; 8] = (len as Field).to_be_bytes();
@@ -433,35 +342,6 @@ unconstrained fn attach_len_to_msg_block(
         | (len_bytes[7] as u32);
 
     msg_block
-}
-
-// Verify that the message length was correctly written by `attach_len_to_msg_block`,
-// and that everything between the byte pointer and the size pointer was zeroed,
-// and that everything before the byte pointer was untouched.
-fn verify_msg_len(
-    msg_block: MSG_BLOCK,
-    last_block: MSG_BLOCK,
-    msg_byte_ptr: BLOCK_BYTE_PTR,
-    message_size: u32,
-) {
-    // Check zeros up to the size pointer.
-    verify_msg_block_zeros(msg_block, msg_byte_ptr, INT_SIZE_PTR);
-
-    // Check that up to the pointer we match the last block.
-    verify_msg_block_equals_last(msg_block, last_block, msg_byte_ptr);
-
-    // We verify the message length was inserted correctly by reversing the byte decomposition.
-    std::static_assert(
-        INT_SIZE_PTR + 2 == INT_BLOCK_SIZE,
-        "INT_SIZE_PTR + 2 must equal INT_BLOCK_SIZE",
-    );
-    let reconstructed_len_hi = msg_block[INT_SIZE_PTR] as Field;
-    let reconstructed_len_lo = msg_block[INT_SIZE_PTR + 1] as Field;
-
-    let reconstructed_len: Field =
-        reconstructed_len_hi * TWO_POW_32 as Field + reconstructed_len_lo;
-    let len = 8 * (message_size as Field);
-    assert_eq(reconstructed_len, len);
 }
 
 // Perform the final compression, then transform the `STATE` into `HASH`.
@@ -488,33 +368,43 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
 ) -> HASH {
     let mut msg_byte_ptr = message_size % BLOCK_SIZE;
 
-    // If we had modulo == 0 then it means the last block was full,
-    // and we can reset the pointer to zero to overwrite it.
-    if msg_byte_ptr == BLOCK_SIZE {
-        msg_byte_ptr = 0;
-    }
-
     // Pad the rest such that we have a [u32; 2] block at the end representing the length
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
     // Here we rely on the fact that everything beyond the available input is set to 0.
     let index = msg_byte_ptr / INT_SIZE;
     msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
 
-    msg_byte_ptr = msg_byte_ptr + 1;
-    let last_block = msg_block;
-
     // If we don't have room to write the size, compress the block and reset it.
-    if msg_byte_ptr > MSG_SIZE_PTR {
+    if msg_byte_ptr >= MSG_SIZE_PTR {
         h = sha256_compression(msg_block, h);
 
-        // `attach_len_to_msg_block` will zero out everything after the `msg_byte_ptr`.
-        msg_byte_ptr = 0;
+        // In this case, the final block consists of all zeros with the last 8 bytes containing the length.
+        // We set msg_block to all zeros and attach_len_to_msg_block will add the length to the last 8 bytes.
+        msg_block = [0; INT_BLOCK_SIZE];
     }
 
-    // Safety: separate verification function
-    msg_block = unsafe { attach_len_to_msg_block(msg_block, msg_byte_ptr, message_size) };
+    let last_block = msg_block;
 
-    verify_msg_len(msg_block, last_block, msg_byte_ptr, message_size);
+    // Safety: separate verification function
+    msg_block = unsafe { attach_len_to_msg_block(msg_block, message_size) };
+
+    // We verify the first 14 elements of the block are unchanged from the last block.
+    for i in 0..INT_SIZE_PTR {
+        assert_eq(msg_block[i], last_block[i]);
+    }
+
+    // We verify the message length (last 2 elements of the block) was inserted correctly by reversing the byte decomposition.
+    std::static_assert(
+        INT_SIZE_PTR + 2 == INT_BLOCK_SIZE,
+        "INT_SIZE_PTR + 2 must equal INT_BLOCK_SIZE",
+    );
+    let reconstructed_len_hi = msg_block[INT_SIZE_PTR] as Field;
+    let reconstructed_len_lo = msg_block[INT_SIZE_PTR + 1] as Field;
+
+    let reconstructed_len: Field =
+        reconstructed_len_hi * TWO_POW_32 as Field + reconstructed_len_lo;
+    let len = 8 * (message_size as Field);
+    assert_eq(reconstructed_len, len);
 
     hash_final_block(msg_block, h)
 }
