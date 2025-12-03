@@ -1,7 +1,6 @@
 use super::{
-    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, make_item,
-    partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
-    set_item_zeros, sha256, sha256_var,
+    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, partial_sha256_var_end,
+    partial_sha256_var_interstitial, set_item_byte_then_zeros, set_item_zeros, sha256, sha256_var,
 };
 use super::constants::{INITIAL_STATE, INT_BLOCK};
 
@@ -264,6 +263,15 @@ fn same_msg_len_variable_padding() {
     assert_eq(var_length_hash_576, fixed_length_hash);
 }
 
+// Construct a u32 out of 4 bytes.
+fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
+    let mut item = b0 as u32;
+    item = (item << 8) + b1 as u32;
+    item = (item << 8) + b2 as u32;
+    item = (item << 8) + b3 as u32;
+    item
+}
+
 #[test]
 fn test_get_item_byte() {
     let fld = make_item(10, 20, 30, 40);
@@ -303,8 +311,7 @@ fn test_build_msg_block_start_0() {
         115, 46, 48,
     ];
     assert_eq(input.len(), 22);
-    // Safety: test function
-    let (msg_block) = unsafe { build_msg_block(input, input.len(), 0) };
+    let (msg_block) = build_msg_block(input, input.len(), 0);
     assert_eq(msg_block[0], make_item(input[0], input[1], input[2], input[3]));
     assert_eq(msg_block[1], make_item(input[4], input[5], input[6], input[7]));
     assert_eq(msg_block[5], make_item(input[20], input[21], 0, 0));
@@ -320,24 +327,22 @@ fn test_build_msg_block_start_1() {
         110, 59, 32, 99, 104, 97, 114, 115, 101, 116,
     ];
     assert_eq(input.len(), 68);
-    // Safety: test function
-    let msg_block = unsafe { build_msg_block(input, input.len(), 64) };
+    let msg_block = build_msg_block(input, input.len(), 64);
     assert_eq(msg_block[0], make_item(input[64], input[65], input[66], input[67]));
     assert_eq(msg_block[1], 0);
 }
 
 #[test]
+// last 8 bytes of msg_block for message_size = 1 is 00 00 00 00 00 00 00 08
 fn test_attach_len_to_msg_block() {
-    let input: INT_BLOCK = [
-        2152555847, 1397309779, 1936618851, 1262052426, 1936876331, 1985297723, 543702374,
-        1919905082, 1131376244, 1701737517, 1417244773, 978151789, 1697470053, 1920166255,
-        1849316213, 1651139939,
-    ];
-    // Safety: test function
-    let msg_block = unsafe { attach_len_to_msg_block(input, 1, 448) };
-    assert_eq(msg_block[0], ((1 << 7) as u32) * 256 * 256 * 256);
-    assert_eq(msg_block[1], 0);
-    assert_eq(msg_block[15], 3584);
+    let input: INT_BLOCK =
+        [2152555847, 1397309779, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1849316213, 1651139939];
+    let msg_block = attach_len_to_msg_block(input, 1);
+    for i in 0..14 {
+        assert_eq(msg_block[i], input[i]);
+    }
+    assert_eq(msg_block[14], 0);
+    assert_eq(msg_block[15], 8);
 }
 
 #[test]
