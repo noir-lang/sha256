@@ -19,6 +19,7 @@ pub(crate) global INT_SIZE_PTR: u32 = MSG_SIZE_PTR / INT_SIZE;
 pub(crate) global TWO_POW_8: u32 = 256;
 pub(crate) global TWO_POW_16: u32 = TWO_POW_8 * 256;
 pub(crate) global TWO_POW_24: u32 = TWO_POW_16 * 256;
+pub(crate) global TWO_POW_32: u64 = TWO_POW_24 as u64 * 256;
 
 // Index of a byte in a 64 byte block; ie. 0..=63
 pub(crate) type BLOCK_BYTE_PTR = u32;
