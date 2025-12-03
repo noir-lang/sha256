@@ -314,19 +314,19 @@ fn rshift8(item: u32, shifts: u32) -> u32 {
 }
 
 // Write the length into the last 8 bytes of the block.
-fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
+unconstrained fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
     // Set the last two 4 byte ints as the first/second half of the 8 bytes of the length.
     let len = 8 * message_size;
     let len_bytes: [u8; 8] = (len as Field).to_be_bytes();
-    msg_block[INT_SIZE_PTR] = (len_bytes[0] as u32) * TWO_POW_24
-        + (len_bytes[1] as u32) * TWO_POW_16
-        + (len_bytes[2] as u32) * TWO_POW_8
-        + (len_bytes[3] as u32);
+    msg_block[INT_SIZE_PTR] = (len_bytes[0] as u32) << 24
+        | (len_bytes[1] as u32) << 16
+        | (len_bytes[2] as u32) << 8
+        | (len_bytes[3] as u32);
 
-    msg_block[INT_SIZE_PTR + 1] = (len_bytes[4] as u32) * TWO_POW_24
-        + (len_bytes[5] as u32) * TWO_POW_16
-        + (len_bytes[6] as u32) * TWO_POW_8
-        + (len_bytes[7] as u32);
+    msg_block[INT_SIZE_PTR + 1] = (len_bytes[4] as u32) << 24
+        | (len_bytes[5] as u32) << 16
+        | (len_bytes[6] as u32) << 8
+        | (len_bytes[7] as u32);
 
     msg_block
 }
@@ -384,9 +384,9 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
     let last_block = msg_block;
 
     // Safety: separate verification function
-    msg_block = attach_len_to_msg_block(msg_block, message_size);
+    msg_block = unsafe { attach_len_to_msg_block(msg_block, message_size) };
 
-    /* // We verify the first 14 elements of the block are unchanged from the last block.
+    // We verify the first 14 elements of the block are unchanged from the last block.
     for i in 0..INT_SIZE_PTR {
         assert_eq(msg_block[i], last_block[i]);
     }
@@ -402,7 +402,7 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
     let reconstructed_len: Field =
         reconstructed_len_hi * TWO_POW_32 as Field + reconstructed_len_lo;
     let len = 8 * (message_size as Field);
-    assert_eq(reconstructed_len, len); */
+    assert_eq(reconstructed_len, len);
 
     hash_final_block(msg_block, h)
 }
