@@ -303,7 +303,6 @@ fn test_build_msg_block_start_0() {
         115, 46, 48,
     ];
     assert_eq(input.len(), 22);
-    // Safety: test function
     let (msg_block) = build_msg_block(input, input.len(), 0);
     assert_eq(msg_block[0], make_item(input[0], input[1], input[2], input[3]));
     assert_eq(msg_block[1], make_item(input[4], input[5], input[6], input[7]));
@@ -320,7 +319,6 @@ fn test_build_msg_block_start_1() {
         110, 59, 32, 99, 104, 97, 114, 115, 101, 116,
     ];
     assert_eq(input.len(), 68);
-    // Safety: test function
     let msg_block = build_msg_block(input, input.len(), 64);
     assert_eq(msg_block[0], make_item(input[64], input[65], input[66], input[67]));
     assert_eq(msg_block[1], 0);
@@ -331,8 +329,7 @@ fn test_build_msg_block_start_1() {
 fn test_attach_len_to_msg_block() {
     let input: INT_BLOCK =
         [2152555847, 1397309779, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1849316213, 1651139939];
-    // Safety: test function
-    let msg_block = unsafe { attach_len_to_msg_block(input, 1) };
+    let msg_block = attach_len_to_msg_block(input, 1);
     for i in 0..14 {
         assert_eq(msg_block[i], input[i]);
     }
