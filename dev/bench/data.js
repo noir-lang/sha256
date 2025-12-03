@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764782298259,
+  "lastUpdate": 1764782300733,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -487,6 +487,50 @@ window.BENCHMARK_DATA = {
           {
             "name": "test_sha256_512",
             "value": 1298,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "26174818+jialinli98@users.noreply.github.com",
+            "name": "Jialin Li",
+            "username": "jialinli98"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "560067e8786657fca3852354b8951ee46c9dbe98",
+          "message": "feat: simplify creating last block (#45)\n\nCo-authored-by: Tom French <15848336+TomAFrench@users.noreply.github.com>",
+          "timestamp": "2025-12-03T17:17:40Z",
+          "tree_id": "983e57b957aa0b2044514bba13d082842ebfa580",
+          "url": "https://github.com/noir-lang/sha256/commit/560067e8786657fca3852354b8951ee46c9dbe98"
+        },
+        "date": 1764782300717,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 728,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 932,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1243,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1244,
             "unit": "opcodes"
           }
         ]
