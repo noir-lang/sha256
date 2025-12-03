@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764782175439,
+  "lastUpdate": 1764782176163,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -201,6 +201,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/815d44db19d275d76d349c551e28a597ae507dcf"
         },
         "date": 1764781831914,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 36000,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 36000,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 43955,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 47947,
+            "unit": "circuit_size"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9826706fba6bf7caa4691c27c2dc3d0ce2d0eee3",
+          "message": "chore: move `make_item` into test file (#48)",
+          "timestamp": "2025-12-03T17:15:54Z",
+          "tree_id": "36ed432f8962763f3e77535d24484bf549b06a7e",
+          "url": "https://github.com/noir-lang/sha256/commit/9826706fba6bf7caa4691c27c2dc3d0ce2d0eee3"
+        },
+        "date": 1764782176147,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
