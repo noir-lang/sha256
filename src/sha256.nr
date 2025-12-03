@@ -315,7 +315,7 @@ fn rshift8(item: u32, shifts: u32) -> u32 {
 }
 
 // Write the length into the last 8 bytes of the block.
-unconstrained fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
+fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
     // Set the last two 4 byte ints as the first/second half of the 8 bytes of the length.
     let len = 8 * message_size;
     let len_bytes: [u8; 8] = (len as Field).to_be_bytes();
@@ -382,28 +382,8 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
     let msg_byte_ptr = message_size % BLOCK_SIZE;
 
     let mut (h, msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
-    let last_block = msg_block;
 
-    // Safety: separate verification function
-    msg_block = unsafe { attach_len_to_msg_block(msg_block, message_size) };
-
-    // We verify the first 14 elements of the block are unchanged from the last block.
-    for i in 0..INT_SIZE_PTR {
-        assert_eq(msg_block[i], last_block[i]);
-    }
-
-    // We verify the message length (last 2 elements of the block) was inserted correctly by reversing the byte decomposition.
-    std::static_assert(
-        INT_SIZE_PTR + 2 == INT_BLOCK_SIZE,
-        "INT_SIZE_PTR + 2 must equal INT_BLOCK_SIZE",
-    );
-    let reconstructed_len_hi = msg_block[INT_SIZE_PTR] as Field;
-    let reconstructed_len_lo = msg_block[INT_SIZE_PTR + 1] as Field;
-
-    let reconstructed_len: Field =
-        reconstructed_len_hi * TWO_POW_32 as Field + reconstructed_len_lo;
-    let len = 8 * (message_size as Field);
-    assert_eq(reconstructed_len, len);
+    msg_block = attach_len_to_msg_block(msg_block, message_size);
 
     hash_final_block(msg_block, h)
 }
