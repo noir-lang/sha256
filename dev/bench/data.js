@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764773591722,
+  "lastUpdate": 1764781830990,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -43,6 +43,50 @@ window.BENCHMARK_DATA = {
           {
             "name": "test_sha256_512.json/main",
             "value": 5347,
+            "unit": "acir_opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "815d44db19d275d76d349c551e28a597ae507dcf",
+          "message": "feat: remove overflow checks when reconstructing `msg_item` (#46)",
+          "timestamp": "2025-12-03T17:10:04Z",
+          "tree_id": "0cf4e3d0c115a93328d51595af7b1fd120802782",
+          "url": "https://github.com/noir-lang/sha256/commit/815d44db19d275d76d349c551e28a597ae507dcf"
+        },
+        "date": 1764781830218,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 874,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 2036,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 3559,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 3555,
             "unit": "acir_opcodes"
           }
         ]
