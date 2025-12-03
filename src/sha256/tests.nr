@@ -1,7 +1,6 @@
 use super::{
-    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte,
-    partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
-    set_item_zeros, sha256, sha256_var,
+    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, partial_sha256_var_end,
+    partial_sha256_var_interstitial, set_item_byte_then_zeros, set_item_zeros, sha256, sha256_var,
 };
 use super::constants::{INITIAL_STATE, INT_BLOCK};
 
