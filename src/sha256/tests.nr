@@ -1,7 +1,6 @@
 use super::{
-    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, make_item,
-    partial_sha256_var_end, partial_sha256_var_interstitial, set_item_byte_then_zeros,
-    set_item_zeros, sha256, sha256_var,
+    attach_len_to_msg_block, build_msg_block, byte_into_item, get_item_byte, partial_sha256_var_end,
+    partial_sha256_var_interstitial, set_item_byte_then_zeros, set_item_zeros, sha256, sha256_var,
 };
 use super::constants::{INITIAL_STATE, INT_BLOCK};
 
@@ -262,6 +261,15 @@ fn same_msg_len_variable_padding() {
     assert_eq(var_length_hash_512, fixed_length_hash);
     assert_eq(var_length_hash_575, fixed_length_hash);
     assert_eq(var_length_hash_576, fixed_length_hash);
+}
+
+// Construct a u32 out of 4 bytes.
+fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
+    let mut item = b0 as u32;
+    item = (item << 8) + b1 as u32;
+    item = (item << 8) + b2 as u32;
+    item = (item << 8) + b3 as u32;
+    item
 }
 
 #[test]

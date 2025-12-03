@@ -341,16 +341,6 @@ fn byte_into_item(msg_byte: u8, msg_byte_ptr: BLOCK_BYTE_PTR) -> u32 {
     lshift8(msg_item, shifts)
 }
 
-// Construct a field out of 4 bytes.
-#[inline_always]
-fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
-    let mut item = b0 as u32;
-    item = (item << 8) + b1 as u32;
-    item = (item << 8) + b2 as u32;
-    item = (item << 8) + b3 as u32;
-    item
-}
-
 global BIT_SHIFT_TABLE: [u32; 4] = [1, TWO_POW_8, TWO_POW_16, TWO_POW_24];
 
 // Shift by 8 bits to the left between 0 and 4 times.
