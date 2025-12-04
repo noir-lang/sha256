@@ -18,7 +18,7 @@ pub fn sha224_var<let N: u32>(msg: [u8; N], message_size: u32) -> sha224_constan
             __sha224_var(msg, message_size)
         }
     } else {
-        let (mut h, mut msg_block) =
+        let (h, msg_block) =
             process_full_blocks(msg, message_size, sha224_constants::INITIAL_STATE_SHA224);
 
         let hash: HASH = finalize_sha256_blocks::<N>(message_size, h, msg_block);
