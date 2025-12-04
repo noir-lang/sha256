@@ -37,7 +37,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HASH {
             __sha256_var(msg, message_size)
         }
     } else {
-        let (mut h, mut msg_block) = process_full_blocks(msg, message_size, INITIAL_STATE);
+        let (h, msg_block) = process_full_blocks(msg, message_size, INITIAL_STATE);
 
         finalize_sha256_blocks::<N>(message_size, h, msg_block)
     }
@@ -82,7 +82,7 @@ pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
         ([0; INT_BLOCK_SIZE], 0)
     };
 
-    let mut (h, msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
+    let (h, mut msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
 
     msg_block = attach_len_to_msg_block(msg_block, message_size);
 
@@ -370,7 +370,7 @@ pub(crate) fn finalize_sha256_blocks<let N: u32>(
 ) -> HASH {
     let msg_byte_ptr = message_size % BLOCK_SIZE;
 
-    let mut (h, msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
+    let (h, mut msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
 
     msg_block = attach_len_to_msg_block(msg_block, message_size);
 
@@ -399,7 +399,7 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
             __sha_partial_var_interstitial(h, msg, message_size)
         }
     } else {
-        let (mut h, _) = process_full_blocks(msg, message_size, h);
+        let (h, _) = process_full_blocks(msg, message_size, h);
 
         h
     }
@@ -435,7 +435,7 @@ pub fn partial_sha256_var_end<let N: u32>(
             finalize_last_sha256_block(h, real_message_size, msg)
         }
     } else {
-        let (mut h, mut msg_block) = process_full_blocks(msg, message_size, h);
+        let (h, msg_block) = process_full_blocks(msg, message_size, h);
         finalize_sha256_blocks::<N>(real_message_size, h, msg_block)
     }
 }
