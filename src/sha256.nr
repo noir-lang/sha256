@@ -2,8 +2,8 @@ use std::hash::sha256_compression;
 use std::runtime::is_unconstrained;
 
 use constants::{
-    BLOCK_BYTE_PTR, BLOCK_SIZE, HASH, INITIAL_STATE, INT_BLOCK, INT_BLOCK_SIZE, INT_SIZE,
-    INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
+    BLOCK_BYTE_PTR, BLOCK_SIZE, HASH, INITIAL_STATE, INT_BLOCK_SIZE, INT_SIZE, INT_SIZE_PTR,
+    MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
 };
 
 pub(crate) mod constants;
@@ -70,20 +70,21 @@ pub(crate) unconstrained fn finalize_last_sha256_block<let N: u32>(
     message_size: u32,
     msg: [u8; N],
 ) -> HASH {
-    let modulo = message_size % BLOCK_SIZE;
-    let (mut msg_block, mut msg_byte_ptr): (INT_BLOCK, u32) = if modulo != 0 {
+    let msg_byte_ptr = message_size % BLOCK_SIZE;
+
+    // We now build the final un-filled block.
+    let msg_block: MSG_BLOCK = if msg_byte_ptr != 0 {
         let num_full_blocks = message_size / BLOCK_SIZE;
         let msg_start = BLOCK_SIZE * num_full_blocks;
-        let new_msg_block = build_msg_block(msg, message_size, msg_start);
-        (new_msg_block, modulo)
+        build_msg_block(msg, message_size, msg_start)
     } else {
-        // If we had modulo == 0 then it means the last block was full,
-        // and we can reset the pointer to zero to overwrite it.
-        ([0; INT_BLOCK_SIZE], 0)
+        // If the message size is a multiple of the block size (i.e. `msg_byte_ptr == 0`) then this block will be empty,
+        // so we short-circuit in this case.
+        [0; 16]
     };
 
+    // Once built, we need to add the necessary padding bytes and encoded length
     let (h, mut msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
-
     msg_block = attach_len_to_msg_block(msg_block, message_size);
 
     hash_final_block(msg_block, h)
@@ -238,16 +239,6 @@ fn set_item_byte_then_zeros(msg_item: u32, msg_byte_ptr: BLOCK_BYTE_PTR, msg_byt
     zeroed_item + new_item
 }
 
-// Get a byte of a message item according to its overall position in the `BLOCK_SIZE` space.
-fn get_item_byte(mut msg_item: u32, msg_byte_ptr: BLOCK_BYTE_PTR) -> u8 {
-    // How many times do we have to shift to the right to get to the position we want?
-    let max_shifts = INT_SIZE - 1;
-    let shifts = max_shifts - msg_byte_ptr % INT_SIZE;
-    msg_item = rshift8(msg_item, shifts);
-    // At this point the byte we want is in the rightmost position.
-    msg_item as u8
-}
-
 // Project a byte into a position in a field based on the overall block pointer.
 // For example putting 1 into pointer 5 would be 100, because overall we would
 // have [____, 0100] with indexes [0123,4567].
@@ -345,7 +336,7 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
 fn add_padding_byte_and_compress_if_needed(
     mut msg_block: MSG_BLOCK,
     msg_byte_ptr: BLOCK_BYTE_PTR,
-    mut h: STATE,
+    h: STATE,
 ) -> (STATE, MSG_BLOCK) {
     // Pad the rest such that we have a [u32; 2] block at the end representing the length
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
@@ -355,14 +346,15 @@ fn add_padding_byte_and_compress_if_needed(
 
     // If we don't have room to write the size, compress the block and reset it.
     if msg_byte_ptr >= MSG_SIZE_PTR {
-        h = sha256_compression(msg_block, h);
+        let h = sha256_compression(msg_block, h);
 
         // In this case, the final block consists of all zeros with the last 8 bytes containing the length.
         // We set msg_block to all zeros and attach_len_to_msg_block will add the length to the last 8 bytes.
-        msg_block = [0; INT_BLOCK_SIZE];
+        let msg_block = [0; INT_BLOCK_SIZE];
+        (h, msg_block)
+    } else {
+        (h, msg_block)
     }
-
-    (h, msg_block)
 }
 
 pub(crate) fn finalize_sha256_blocks<let N: u32>(
