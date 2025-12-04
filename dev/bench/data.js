@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764855896264,
+  "lastUpdate": 1764855898558,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -751,6 +751,50 @@ window.BENCHMARK_DATA = {
           {
             "name": "test_sha256_512",
             "value": 1244,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "26174818+jialinli98@users.noreply.github.com",
+            "name": "Jialin Li",
+            "username": "jialinli98"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "487a7f1ea5bc33dc84ae91b5e8d56cacc7241880",
+          "message": "chore: optimize attach_len (#49)\n\nCo-authored-by: Tom French <15848336+TomAFrench@users.noreply.github.com>",
+          "timestamp": "2025-12-04T13:44:30Z",
+          "tree_id": "ac72673ad8c3ff5fbd9dd90e7254c19fd72fe861",
+          "url": "https://github.com/noir-lang/sha256/commit/487a7f1ea5bc33dc84ae91b5e8d56cacc7241880"
+        },
+        "date": 1764855898543,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 666,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 870,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1181,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1182,
             "unit": "opcodes"
           }
         ]
