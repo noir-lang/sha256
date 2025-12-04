@@ -315,7 +315,7 @@ unconstrained fn decode_len(message_size: u32) -> (u32, u32) {
 fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
     // Safety: we verify the size is correctly encoded
     let (lo, hi) = unsafe { decode_len(message_size) };
-    assert_eq((message_size * 8) as Field, lo as Field + hi as Field * TWO_POW_32);
+    assert_eq(8 * (message_size as Field), lo as Field + hi as Field * TWO_POW_32);
     msg_block[INT_SIZE_PTR] = hi;
     msg_block[INT_SIZE_PTR + 1] = lo;
     msg_block
