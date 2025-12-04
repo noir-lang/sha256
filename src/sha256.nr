@@ -3,7 +3,7 @@ use std::runtime::is_unconstrained;
 
 use constants::{
     BLOCK_BYTE_PTR, BLOCK_SIZE, HASH, INITIAL_STATE, INT_BLOCK, INT_BLOCK_SIZE, INT_SIZE,
-    INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_8,
+    INT_SIZE_PTR, MSG_BLOCK, MSG_SIZE_PTR, STATE, TWO_POW_16, TWO_POW_24, TWO_POW_32, TWO_POW_8,
 };
 
 pub(crate) mod constants;
@@ -303,21 +303,23 @@ fn rshift8(item: u32, shifts: u32) -> u32 {
     }
 }
 
+// Encode `8 * message_size` into two `u32` limbs.
+unconstrained fn encode_len(message_size: u32) -> (u32, u32) {
+    let len = 8 * message_size as u64;
+    let lo = len & 0xFFFFFFFF;
+    let hi = (len >> 32) & 0xFFFFFFFF;
+    (lo as u32, hi as u32)
+}
+
 // Write the length into the last 8 bytes of the block.
 fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
-    // Set the last two 4 byte ints as the first/second half of the 8 bytes of the length.
-    let len = 8 * message_size;
-    let len_bytes: [u8; 8] = (len as Field).to_be_bytes();
-    msg_block[INT_SIZE_PTR] = (len_bytes[0] as u32) * TWO_POW_24
-        + (len_bytes[1] as u32) * TWO_POW_16
-        + (len_bytes[2] as u32) * TWO_POW_8
-        + (len_bytes[3] as u32);
+    // Safety: We assert the correctness of the decomposition below.
+    // 2 `u32` limbs cannot overflow the field modulus so performing the check as `Field`s is safe.
+    let (lo, hi) = unsafe { encode_len(message_size) };
+    assert_eq(8 * (message_size as Field), lo as Field + hi as Field * TWO_POW_32);
 
-    msg_block[INT_SIZE_PTR + 1] = (len_bytes[4] as u32) * TWO_POW_24
-        + (len_bytes[5] as u32) * TWO_POW_16
-        + (len_bytes[6] as u32) * TWO_POW_8
-        + (len_bytes[7] as u32);
-
+    msg_block[INT_SIZE_PTR] = hi;
+    msg_block[INT_SIZE_PTR + 1] = lo;
     msg_block
 }
 
