@@ -317,7 +317,7 @@ fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_B
     // 2 `u32` limbs cannot overflow the field modulus so performing the check as `Field`s is safe.
     let (lo, hi) = unsafe { encode_len(message_size) };
     assert_eq(8 * (message_size as Field), lo as Field + hi as Field * TWO_POW_32);
-    
+
     msg_block[INT_SIZE_PTR] = hi;
     msg_block[INT_SIZE_PTR + 1] = lo;
     msg_block
