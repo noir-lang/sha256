@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1764847549115,
+  "lastUpdate": 1764847550520,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -599,6 +599,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/560067e8786657fca3852354b8951ee46c9dbe98"
         },
         "date": 1764782300717,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 728,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 932,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1243,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1244,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ecbce80dbb81d3d513dc2cef44665730652fa8e",
+          "message": "chore: remove unnecessary mutability (#50)",
+          "timestamp": "2025-12-04T11:25:18Z",
+          "tree_id": "49480d2830408a41d76afd16ff61fd69ff026801",
+          "url": "https://github.com/noir-lang/sha256/commit/1ecbce80dbb81d3d513dc2cef44665730652fa8e"
+        },
+        "date": 1764847550506,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
