@@ -303,8 +303,8 @@ fn rshift8(item: u32, shifts: u32) -> u32 {
     }
 }
 
-// Split the 64-bit message length into low and high 32-bit halves.
-unconstrained fn decode_len(message_size: u32) -> (u32, u32) {
+// Encode `8 * message_size` into two `u32` limbs.
+unconstrained fn encode_len(message_size: u32) -> (u32, u32) {
     let len = 8 * message_size as u64;
     let lo = len & 0xFFFFFFFF;
     let hi = (len >> 32) & 0xFFFFFFFF;
@@ -313,9 +313,11 @@ unconstrained fn decode_len(message_size: u32) -> (u32, u32) {
 
 // Write the length into the last 8 bytes of the block.
 fn attach_len_to_msg_block(mut msg_block: MSG_BLOCK, message_size: u32) -> MSG_BLOCK {
-    // Safety: we verify the size is correctly encoded
-    let (lo, hi) = unsafe { decode_len(message_size) };
+    // Safety: We assert the correctness of the decomposition below.
+    // 2 `u32` limbs cannot overflow the field modulus so performing the check as `Field`s is safe.
+    let (lo, hi) = unsafe { encode_len(message_size) };
     assert_eq(8 * (message_size as Field), lo as Field + hi as Field * TWO_POW_32);
+    
     msg_block[INT_SIZE_PTR] = hi;
     msg_block[INT_SIZE_PTR + 1] = lo;
     msg_block
