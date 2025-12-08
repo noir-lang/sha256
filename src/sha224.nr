@@ -36,7 +36,8 @@ unconstrained fn __sha224_var<let N: u32>(
     msg: [u8; N],
     message_size: u32,
 ) -> sha224_constants::HASH_SHA224 {
-     let (h, msg_block) = process_full_blocks(msg, message_size, sha224_constants::INITIAL_STATE_SHA224);
+    let (h, msg_block) =
+        process_full_blocks(msg, message_size, sha224_constants::INITIAL_STATE_SHA224);
 
     let hash = finalize_sha256_blocks(message_size, h, msg_block);
     let mut hash_sha224: sha224_constants::HASH_SHA224 = [0; 28];
