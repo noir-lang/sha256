@@ -40,12 +40,12 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HASH {
 pub(crate) fn process_full_blocks<let N: u32>(
     msg: [u8; N],
     message_size: u32,
-    h: STATE,
+    initial_state: STATE,
 ) -> (STATE, MSG_BLOCK) {
     if std::runtime::is_unconstrained() {
         let num_full_blocks = message_size / BLOCK_SIZE;
         // Intermediate hash, starting with the canonical initial value
-        let mut h: STATE = h;
+        let mut h: STATE = initial_state;
         // Pointer into msg_block on a 64 byte scale
         for i in 0..num_full_blocks {
             let msg_block = build_msg_block(msg, message_size, BLOCK_SIZE * i);
@@ -84,7 +84,7 @@ pub(crate) fn process_full_blocks<let N: u32>(
         //
         // We place the initial state in `states[0]` as in the case where the `message_size < BLOCK_SIZE` then there are no full blocks to process and no compressions should occur.
         let mut blocks: [MSG_BLOCK; N / BLOCK_SIZE + 1] = std::mem::zeroed();
-        let mut states: [STATE; N / BLOCK_SIZE + 1] = [h; N / BLOCK_SIZE + 1];
+        let mut states: [STATE; N / BLOCK_SIZE + 1] = [initial_state; N / BLOCK_SIZE + 1];
 
         // Optimization for small messages. If the largest possible message is smaller than a block then we know that the first block is partially filled
         // no matter the value of `message_size`.
