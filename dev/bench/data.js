@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765221678272,
+  "lastUpdate": 1765221680785,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -995,6 +995,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/0ba68e363035e628fead024b4f562c751fdfdf84"
         },
         "date": 1764859923741,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 649,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 853,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1164,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1165,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2957e46525de927b10c27a3d508aa88be186ebec",
+          "message": "chore: remove unnecessary generics (#52)",
+          "timestamp": "2025-12-08T19:20:48Z",
+          "tree_id": "855b8eb143434a824f347e6564d126b91c8ffd90",
+          "url": "https://github.com/noir-lang/sha256/commit/2957e46525de927b10c27a3d508aa88be186ebec"
+        },
+        "date": 1765221680765,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
