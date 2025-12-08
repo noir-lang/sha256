@@ -39,7 +39,7 @@ pub fn sha256_var<let N: u32>(msg: [u8; N], message_size: u32) -> HASH {
     } else {
         let (h, msg_block) = process_full_blocks(msg, message_size, INITIAL_STATE);
 
-        finalize_sha256_blocks::<N>(message_size, h, msg_block)
+        finalize_sha256_blocks(message_size, h, msg_block)
     }
 }
 
@@ -357,7 +357,7 @@ fn add_padding_byte_and_compress_if_needed(
     }
 }
 
-pub(crate) fn finalize_sha256_blocks<let N: u32>(
+pub(crate) fn finalize_sha256_blocks(
     message_size: u32,
     mut h: STATE,
     mut msg_block: MSG_BLOCK,
@@ -430,7 +430,7 @@ pub fn partial_sha256_var_end<let N: u32>(
         }
     } else {
         let (h, msg_block) = process_full_blocks(msg, message_size, h);
-        finalize_sha256_blocks::<N>(real_message_size, h, msg_block)
+        finalize_sha256_blocks(real_message_size, h, msg_block)
     }
 }
 
