@@ -1,6 +1,6 @@
 use crate::sha256::constants::HASH;
 
-use crate::sha256::{__sha_var, finalize_sha256_blocks, partial_sha256_var_end, process_full_blocks};
+use crate::sha256::{finalize_sha256_blocks, partial_sha256_var_end, process_full_blocks};
 
 use constants as sha224_constants;
 
@@ -36,7 +36,9 @@ unconstrained fn __sha224_var<let N: u32>(
     msg: [u8; N],
     message_size: u32,
 ) -> sha224_constants::HASH_SHA224 {
-    let hash = __sha_var(msg, message_size, sha224_constants::INITIAL_STATE_SHA224);
+     let (h, msg_block) = process_full_blocks(msg, message_size, sha224_constants::INITIAL_STATE_SHA224);
+
+    let hash = finalize_sha256_blocks(message_size, h, msg_block);
     let mut hash_sha224: sha224_constants::HASH_SHA224 = [0; 28];
     for i in 0..28 {
         hash_sha224[i] = hash[i];
