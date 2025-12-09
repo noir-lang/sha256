@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765295604713,
+  "lastUpdate": 1765297020993,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -395,6 +395,50 @@ window.BENCHMARK_DATA = {
           {
             "name": "test_sha256_512.json/main",
             "value": 3208,
+            "unit": "acir_opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89aa946461628938329cc6dff36fd4594be1dfed",
+          "message": "feat: replace bitshifts with a lookup (#56)",
+          "timestamp": "2025-12-09T16:16:32Z",
+          "tree_id": "4a0c602900df0cff1da7728152556a4556199f51",
+          "url": "https://github.com/noir-lang/sha256/commit/89aa946461628938329cc6dff36fd4594be1dfed"
+        },
+        "date": 1765297020730,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 500,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 1662,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 3185,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 3181,
             "unit": "acir_opcodes"
           }
         ]
