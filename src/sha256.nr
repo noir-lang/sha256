@@ -233,8 +233,13 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
 global PADDING_BIT_TABLE: [u32; 4] =
     [(1 << 7) * TWO_POW_24, (1 << 7) * TWO_POW_16, (1 << 7) * TWO_POW_8, (1 << 7)];
 
-// Add 1 bit padding to end of message and compress the block if there's not enough room for the 8-byte length.
-// Returns the updated hash state and message block that will be used to write the message size.
+/// Add 1 bit padding to end of message and compress the block if there's not enough room for the 8-byte length.
+/// Returns the updated hash state and message block that will be used to write the message size.
+///
+/// # Assumptions:
+///
+/// - `msg_block[i] == 0` for all `i > msg_byte_ptr / INT_SIZE`
+/// - `msg_block[msg_byte_ptr / INT_SIZE] & ((1 << 7) * (msg_byte_ptr % INT_SIZE)) == 0`
 fn add_padding_byte_and_compress_if_needed(
     mut msg_block: MSG_BLOCK,
     msg_byte_ptr: BLOCK_BYTE_PTR,
