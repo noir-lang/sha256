@@ -192,75 +192,6 @@ fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) 
     msg_block
 }
 
-// Set the rightmost `zeros` number of bytes to 0.
-#[inline_always]
-fn set_item_zeros(item: u32, zeros: u32) -> u32 {
-    lshift8(rshift8(item, zeros), zeros)
-}
-
-// Replace one byte in the item with a value, and set everything after it to zero.
-fn set_item_byte_then_zeros(msg_item: u32, msg_byte_ptr: BLOCK_BYTE_PTR, msg_byte: u8) -> u32 {
-    let zeros = INT_SIZE - msg_byte_ptr % INT_SIZE;
-    let zeroed_item = set_item_zeros(msg_item, zeros);
-    let new_item = byte_into_item(msg_byte, msg_byte_ptr);
-    zeroed_item + new_item
-}
-
-// Project a byte into a position in a field based on the overall block pointer.
-// For example putting 1 into pointer 5 would be 100, because overall we would
-// have [____, 0100] with indexes [0123,4567].
-#[inline_always]
-fn byte_into_item(msg_byte: u8, msg_byte_ptr: BLOCK_BYTE_PTR) -> u32 {
-    let mut msg_item = msg_byte as u32;
-    // How many times do we have to shift to the left to get to the position we want?
-    let max_shifts = INT_SIZE - 1;
-    let shifts = max_shifts - msg_byte_ptr % INT_SIZE;
-    lshift8(msg_item, shifts)
-}
-
-global BIT_SHIFT_TABLE: [u32; 4] = [1, TWO_POW_8, TWO_POW_16, TWO_POW_24];
-
-// Shift by 8 bits to the left between 0 and 4 times.
-// Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
-// otherwise multiplies by 256.
-#[inline_always]
-fn lshift8(item: u32, shifts: u32) -> u32 {
-    if is_unconstrained() {
-        // Brillig wouldn't shift 0<<4 without overflow.
-        if shifts >= 4 {
-            0
-        } else {
-            item << (8 * shifts)
-        }
-    } else {
-        if shifts == 4 {
-            0
-        } else {
-            item * BIT_SHIFT_TABLE[shifts]
-        }
-    }
-}
-
-// Shift by 8 bits to the right between 0 and 4 times.
-// Checks `is_unconstrained()` to just use a bitshift if we're running in an unconstrained context,
-// otherwise divides by 256.
-#[inline_always]
-fn rshift8(item: u32, shifts: u32) -> u32 {
-    if is_unconstrained() {
-        if shifts >= 4 {
-            0
-        } else {
-            item >> (8 * shifts)
-        }
-    } else {
-        if shifts == 4 {
-            0
-        } else {
-            item / BIT_SHIFT_TABLE[shifts]
-        }
-    }
-}
-
 // Encode `8 * message_size` into two `u32` limbs.
 unconstrained fn encode_len(message_size: u32) -> (u32, u32) {
     let len = 8 * message_size as u64;
@@ -298,8 +229,17 @@ fn hash_final_block(msg_block: MSG_BLOCK, mut state: STATE) -> HASH {
     out_h
 }
 
-// Add 1 bit padding to end of message and compress the block if there's not enough room for the 8-byte length.
-// Returns the updated hash state and message block that will be used to write the message size.
+/// Lookup table for the position of the padding bit within one of the `u32` words in the final message block.
+global PADDING_BIT_TABLE: [u32; 4] =
+    [(1 << 7) * TWO_POW_24, (1 << 7) * TWO_POW_16, (1 << 7) * TWO_POW_8, (1 << 7)];
+
+/// Add 1 bit padding to end of message and compress the block if there's not enough room for the 8-byte length.
+/// Returns the updated hash state and message block that will be used to write the message size.
+///
+/// # Assumptions:
+///
+/// - `msg_block[i] == 0` for all `i > msg_byte_ptr / INT_SIZE`
+/// - `msg_block[msg_byte_ptr / INT_SIZE] & ((1 << 7) * (msg_byte_ptr % INT_SIZE)) == 0`
 fn add_padding_byte_and_compress_if_needed(
     mut msg_block: MSG_BLOCK,
     msg_byte_ptr: BLOCK_BYTE_PTR,
@@ -309,7 +249,9 @@ fn add_padding_byte_and_compress_if_needed(
     // of the message, and a block of 1 0 ... 0 following the message (i.e. [1 << 7, 0, ..., 0]).
     // Here we rely on the fact that everything beyond the available input is set to 0.
     let index = msg_byte_ptr / INT_SIZE;
-    msg_block[index] = set_item_byte_then_zeros(msg_block[index], msg_byte_ptr, 1 << 7);
+
+    // Lookup the position of the padding bit and insert it into the message block.
+    msg_block[index] += PADDING_BIT_TABLE[msg_byte_ptr % INT_SIZE];
 
     // If we don't have room to write the size, compress the block and reset it.
     if msg_byte_ptr >= MSG_SIZE_PTR {

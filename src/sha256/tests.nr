@@ -1,9 +1,8 @@
 use super::{
-    attach_len_to_msg_block, build_msg_block, byte_into_item, partial_sha256_var_end,
-    partial_sha256_var_interstitial, rshift8, set_item_byte_then_zeros, set_item_zeros, sha256,
-    sha256_var,
+    attach_len_to_msg_block, build_msg_block, partial_sha256_var_end,
+    partial_sha256_var_interstitial, sha256, sha256_var,
 };
-use super::constants::{BLOCK_BYTE_PTR, INITIAL_STATE, INT_BLOCK, INT_SIZE};
+use super::constants::{INITIAL_STATE, INT_BLOCK};
 
 #[export]
 fn test_sha256_1(input: [u8; 1], len: u32) -> [u8; 32] {
@@ -271,48 +270,6 @@ fn make_item(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
     item = (item << 8) + b2 as u32;
     item = (item << 8) + b3 as u32;
     item
-}
-
-// Get a byte of a message item according to its overall position in the `BLOCK_SIZE` space.
-fn get_item_byte(mut msg_item: u32, msg_byte_ptr: BLOCK_BYTE_PTR) -> u8 {
-    // How many times do we have to shift to the right to get to the position we want?
-    let max_shifts = INT_SIZE - 1;
-    let shifts = max_shifts - msg_byte_ptr % INT_SIZE;
-    msg_item = rshift8(msg_item, shifts);
-    // At this point the byte we want is in the rightmost position.
-    msg_item as u8
-}
-
-#[test]
-fn test_get_item_byte() {
-    let fld = make_item(10, 20, 30, 40);
-    assert_eq(fld, 0x0a141e28);
-    assert_eq(get_item_byte(fld, 0), 10);
-    assert_eq(get_item_byte(fld, 4), 10);
-    assert_eq(get_item_byte(fld, 6), 30);
-}
-
-#[test]
-fn test_byte_into_item() {
-    let fld = make_item(0, 20, 0, 0);
-    assert_eq(byte_into_item(20, 1), fld);
-    assert_eq(byte_into_item(20, 5), fld);
-}
-
-#[test]
-fn test_set_item_zeros() {
-    let fld0 = make_item(10, 20, 30, 40);
-    let fld1 = make_item(10, 0, 0, 0);
-    assert_eq(set_item_zeros(fld0, 3), fld1);
-    assert_eq(set_item_zeros(fld0, 4), 0);
-    assert_eq(set_item_zeros(0, 4), 0);
-}
-
-#[test]
-fn test_set_item_byte_then_zeros() {
-    let fld0 = make_item(10, 20, 30, 40);
-    let fld1 = make_item(10, 50, 0, 0);
-    assert_eq(set_item_byte_then_zeros(fld0, 1, 50), fld1);
 }
 
 #[test]
