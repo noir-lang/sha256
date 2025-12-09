@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765295602694,
+  "lastUpdate": 1765295603298,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -729,6 +729,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/2957e46525de927b10c27a3d508aa88be186ebec"
         },
         "date": 1765221678256,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 36000,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 36000,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 43339,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 47331,
+            "unit": "circuit_size"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "15b617d9b129d8235843460c76804406ea32e6b5",
+          "message": "chore: reduce differences in function flow between constrained and unconstrained runtimes (#53)",
+          "timestamp": "2025-12-09T15:53:01Z",
+          "tree_id": "3fb00d35cd9af9153e9db382d4d3c5760ea52188",
+          "url": "https://github.com/noir-lang/sha256/commit/15b617d9b129d8235843460c76804406ea32e6b5"
+        },
+        "date": 1765295603282,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
