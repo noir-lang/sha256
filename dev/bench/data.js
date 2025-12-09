@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1765297023166,
+  "lastUpdate": 1765297339116,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -419,6 +419,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/89aa946461628938329cc6dff36fd4594be1dfed"
         },
         "date": 1765297020730,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 500,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 1662,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 3185,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 3181,
+            "unit": "acir_opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "163862677+noirwhal@users.noreply.github.com",
+            "name": "noirwhal",
+            "username": "noirwhal"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9442e5b6856f98b2ec029882d7e90199ecff91ba",
+          "message": "chore: Release 0.3.0 (#41)",
+          "timestamp": "2025-12-09T16:21:55Z",
+          "tree_id": "a2195e3de699e078b05f30d692f68f39d187e4fc",
+          "url": "https://github.com/noir-lang/sha256/commit/9442e5b6856f98b2ec029882d7e90199ecff91ba"
+        },
+        "date": 1765297338630,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
