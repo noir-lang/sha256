@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.0](https://github.com/noir-lang/sha256/compare/v0.2.1...v0.3.0) (2025-12-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* change length argument to be u32 ([#38](https://github.com/noir-lang/sha256/issues/38))
+
+### Features
+
+* Optimize `attach_len_to_msg_block` ([#49](https://github.com/noir-lang/sha256/issues/49)) ([487a7f1](https://github.com/noir-lang/sha256/commit/487a7f1ea5bc33dc84ae91b5e8d56cacc7241880))
+* Optimize `verify_msg_block` ([#42](https://github.com/noir-lang/sha256/issues/42)) ([e247187](https://github.com/noir-lang/sha256/commit/e247187bde004a11cb12a5d7907eb829a5b9366a))
+* Remove overflow checks when reconstructing `msg_item` ([#46](https://github.com/noir-lang/sha256/issues/46)) ([815d44d](https://github.com/noir-lang/sha256/commit/815d44db19d275d76d349c551e28a597ae507dcf))
+* Remove zero padding check ([#44](https://github.com/noir-lang/sha256/issues/44)) ([953b2b6](https://github.com/noir-lang/sha256/commit/953b2b62c44a00712a6ffbfd8e15d2ced007274d))
+* Replace bitshifts with a lookup ([#56](https://github.com/noir-lang/sha256/issues/56)) ([89aa946](https://github.com/noir-lang/sha256/commit/89aa946461628938329cc6dff36fd4594be1dfed))
+* Simplify creating last block ([#45](https://github.com/noir-lang/sha256/issues/45)) ([560067e](https://github.com/noir-lang/sha256/commit/560067e8786657fca3852354b8951ee46c9dbe98))
+
+
+### Miscellaneous Chores
+
+* Change length argument to be u32 ([#38](https://github.com/noir-lang/sha256/issues/38)) ([c204b60](https://github.com/noir-lang/sha256/commit/c204b60dca6236538a0ccaa35578b635c4a74730))
+
 ## [0.2.1](https://github.com/noir-lang/sha256/compare/v0.2.0...v0.2.1) (2025-09-03)
 
 
