@@ -167,7 +167,7 @@ fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) 
         unsafe { build_msg_block_helper(msg, message_size, msg_start) };
 
     if !is_unconstrained() {
-        let mut msg_end = msg_start + BLOCK_SIZE;
+        let msg_end = msg_start + BLOCK_SIZE;
 
         let max_read_index = std::cmp::min(message_size, msg_end);
 
