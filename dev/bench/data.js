@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1773424510373,
+  "lastUpdate": 1773424512689,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -1523,6 +1523,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/9442e5b6856f98b2ec029882d7e90199ecff91ba"
         },
         "date": 1765297341780,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 623,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 827,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1138,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1139,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "15848336+TomAFrench@users.noreply.github.com",
+            "name": "Tom French",
+            "username": "TomAFrench"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e20d7275a2533b209a04503cbe62c14b4d995121",
+          "message": "chore: remove unnecessary `mut` keyword (#58)",
+          "timestamp": "2026-03-13T17:54:45Z",
+          "tree_id": "95f8ccafc0ddbd78db5d8cc354e7e1b24bf501d8",
+          "url": "https://github.com/noir-lang/sha256/commit/e20d7275a2533b209a04503cbe62c14b4d995121"
+        },
+        "date": 1773424512674,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
