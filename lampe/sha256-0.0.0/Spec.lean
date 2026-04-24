@@ -208,8 +208,7 @@ noncomputable def sha256VarSpec {N : ℕ} (msg : List.Vector (U 8) N) (message_s
 theorem build_msg_block_spec {p : Prime} {N : U 32}
     (msg         : List.Vector (U 8) N.toNat)
     (message_size : U 32)
-    (msg_start   : U 32)
-    (h_comp : Sha256CompressionSpec p «sha256-0.0.0».env) :
+    (msg_start   : U 32):
     STHoare p «sha256-0.0.0».env ⟦⟧
       («sha256-0.0.0::sha256::build_msg_block».call h![N] h![msg, message_size, msg_start])
       (fun r => r = buildMsgBlockRef msg.toList message_size.toNat msg_start.toNat) := by
@@ -252,8 +251,7 @@ theorem attach_len_to_msg_block_spec {p : Prime}
     then unpacks the resulting 8-word state into 32 bytes big-endian. -/
 theorem hash_final_block_spec {p : Prime}
     (block : MsgBlock)
-    (state : State)
-    (h_comp : Sha256CompressionSpec p «sha256-0.0.0».env) :
+    (state : State):
     STHoare p «sha256-0.0.0».env ⟦⟧
       («sha256-0.0.0::sha256::hash_final_block».call h![] h![block, state])
       (fun r => r = stateToHashRef (sha256CompressionFn block state)) := by
