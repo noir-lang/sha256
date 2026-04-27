@@ -343,6 +343,17 @@ theorem finalize_sha256_blocks_spec {p : Prime}
 -- 6.  Main correctness theorem
 -- ============================================================
 
+/-- `INITIAL_STATE` constant evaluates to `initialState`. Needed so that `steps`
+    can process the `let #v = INITIAL_STATE()` binding in `sha256_var`. -/
+theorem INITIAL_STATE_const_spec {p : Prime} :
+    STHoare p «sha256-0.0.0».env ⟦⟧
+      («sha256-0.0.0::sha256::constants::INITIAL_STATE».call h![] h![])
+      (fun r => r = initialState) := by
+  enter_decl
+  steps
+  simp_all [initialState, HList.toVec, HList.toList_cons]
+  norm_cast
+
 /-- `sha256_var` is correct: given a byte array `msg` of capacity `N` and a
     runtime `message_size ≤ N`, it returns the SHA-256 digest of the first
     `message_size` bytes of `msg`.
@@ -365,7 +376,16 @@ theorem sha256_var_correct {p : Prime} {N : U 32}
     STHoare p «sha256-0.0.0».env ⟦⟧
       («sha256-0.0.0::sha256::sha256_var».call h![N] h![msg, message_size])
       (fun result => result = sha256VarSpec msg message_size.toNat) := by
-  sorry
+  enter_decl
+  steps [INITIAL_STATE_const_spec,
+         process_full_blocks_spec,
+         finalize_sha256_blocks_spec]
+  · -- Props goal: result = sha256VarSpec msg message_size.toNat.
+    -- simp_all rewrites using the postcondition equalities accumulated in context,
+    -- then unfolds sha256VarSpec / sha256Ref / sha256With to conclude.
+    simp_all [sha256VarSpec, sha256Ref, sha256With, finalizeSha256BlocksRef, processFullBlocksRef]
+  · exact h_comp  -- Sha256CompressionSpec for finalize_sha256_blocks_spec
+  · exact h_comp  -- Sha256CompressionSpec for process_full_blocks_spec
 
 -- ============================================================
 -- 7.  Checked tests for computable helpers
