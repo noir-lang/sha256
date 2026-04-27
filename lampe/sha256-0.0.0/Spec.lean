@@ -251,7 +251,8 @@ theorem attach_len_to_msg_block_spec {p : Prime}
     then unpacks the resulting 8-word state into 32 bytes big-endian. -/
 theorem hash_final_block_spec {p : Prime}
     (block : MsgBlock)
-    (state : State):
+    (state : State)
+    (h_comp : Sha256CompressionSpec p «sha256-0.0.0».env) :
     STHoare p «sha256-0.0.0».env ⟦⟧
       («sha256-0.0.0::sha256::hash_final_block».call h![] h![block, state])
       (fun r => r = stateToHashRef (sha256CompressionFn block state)) := by
