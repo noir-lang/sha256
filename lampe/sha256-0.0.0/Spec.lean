@@ -301,6 +301,16 @@ theorem add_padding_and_compress_spec {p : Prime}
         r = (h', block', ())) := by
   sorry
 
+/-- `BLOCK_SIZE` constant evaluates to 64 : U 32. Needed so that `steps` can
+    process the `let #v = BLOCK_SIZE()` binding in `finalize_sha256_blocks`. -/
+theorem BLOCK_SIZE_const_spec {p : Prime} :
+    STHoare p «sha256-0.0.0».env ⟦⟧
+      («sha256-0.0.0::sha256::constants::BLOCK_SIZE».call h![] h![])
+      (fun r => r = (64 : U 32)) := by
+  enter_decl
+  steps
+  norm_cast
+
 /-- `finalize_sha256_blocks` pads the partial block, writes the length, performs
     the final compression, and serialises the state — matching
     `finalizeSha256BlocksRef`.
@@ -315,7 +325,19 @@ theorem finalize_sha256_blocks_spec {p : Prime}
     STHoare p «sha256-0.0.0».env ⟦⟧
       («sha256-0.0.0::sha256::finalize_sha256_blocks».call h![] h![message_size, h, block])
       (fun r => r = finalizeSha256BlocksRef message_size.toNat h block) := by
-  sorry
+  enter_decl
+  steps [BLOCK_SIZE_const_spec,
+         add_padding_and_compress_spec,
+         attach_len_to_msg_block_spec,
+         hash_final_block_spec]
+  · -- Props goal: r = finalizeSha256BlocksRef ... with r = stateToHashRef X in context.
+    simp_all [finalizeSha256BlocksRef, finalizeSha256BlocksWith, addPaddingAndCompressRef,
+              BLOCK_SIZE, BitVec.toNat_umod]
+  · exact h_comp  -- Sha256CompressionSpec for hash_final_block_spec
+  · -- h_bnd: msg_byte_ptr.toNat < BLOCK_SIZE, where msg_byte_ptr = message_size.uRem 64.
+    simp_all [BLOCK_SIZE, BitVec.toNat_umod]
+    exact Nat.mod_lt _ (by norm_num)
+  · exact h_comp  -- Sha256CompressionSpec for add_padding_and_compress_spec
 
 -- ============================================================
 -- 6.  Main correctness theorem
