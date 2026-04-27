@@ -248,7 +248,17 @@ theorem attach_len_to_msg_block_spec {p : Prime}
   sorry
 
 /-- `hash_final_block` compresses `block` against `state` via `sha256Compression`,
-    then unpacks the resulting 8-word state into 32 bytes big-endian. -/
+    then unpacks the resulting 8-word state into 32 bytes big-endian.
+
+    Proof strategy:
+    1. Apply `h_comp` to rewrite the `#_sha256Compression` builtin call to
+       `sha256CompressionFn block state`, binding the resulting state to `state'`.
+    2. Unfold the two nested loops (outer `j : 0..8`, inner `k : 0..4`): each
+       iteration writes `(to_be_bytes state'[j])[k]` into `out_h[4*j+k]`.
+    3. Show that big-endian byte `k` of word `w` equals
+       `(w.toNat >>> (8 * (3 - k))) % 256`, matching the `stateToHashRef`
+       formula `BitVec.ofNat 8 ((word >>> shift) % 256)` with `shift = 8*(3-k)`.
+    4. Conclude by element-wise equality across all 32 output positions (`vecOfFn`). -/
 theorem hash_final_block_spec {p : Prime}
     (block : MsgBlock)
     (state : State)
@@ -260,7 +270,23 @@ theorem hash_final_block_spec {p : Prime}
 
 /-- `add_padding_byte_and_compress_if_needed` inserts the 0x80 padding byte at
     `msg_byte_ptr` and conditionally flushes the block, matching
-    `addPaddingAndCompressRef`. -/
+    `addPaddingAndCompressRef`.
+
+    Proof strategy:
+    1. Evaluate `PADDING_BIT_TABLE[msg_byte_ptr % INT_SIZE]`: since
+       `msg_byte_ptr % 4 ∈ {0,1,2,3}` and the table holds
+       `[0x80000000, 0x00800000, 0x00008000, 0x00000080]`, show the looked-up
+       value equals `paddingWordNat msg_byte_ptr` in each case.
+    2. Show the in-place word update at `index = msg_byte_ptr / INT_SIZE` matches
+       `block.set word_idx (block.get word_idx + BitVec.ofNat 32 (paddingWordNat msg_byte_ptr))`,
+       yielding `block'`.
+    3. Case-split on `msg_byte_ptr ≥ MSG_SIZE_PTR` (i.e. `msg_byte_ptr ≥ 56`):
+       - **True branch**: apply `h_comp` to reduce the `#_sha256Compression` call
+         to `sha256CompressionFn block' state`, and show the reset
+         `msg_block = [0; 16]` equals `vecReplicate 16 0`; the result matches
+         `addPaddingAndCompressRef` in the `≥ MSG_SIZE_PTR` branch.
+       - **False branch**: no compression occurs; the pair `(state, block')` directly
+         matches `addPaddingAndCompressRef` in the `< MSG_SIZE_PTR` branch. -/
 theorem add_padding_and_compress_spec {p : Prime}
     (block        : MsgBlock)
     (msg_byte_ptr : U 32)
