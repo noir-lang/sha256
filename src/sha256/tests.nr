@@ -484,6 +484,50 @@ fn fuzz_partial_end_matches_reference(msg: [u8; 192], real_message_size: u32) {
     assert_eq(hash, sha256_var(msg, real));
 }
 
+// Composed (interstitial + end) hashing of a non-block-aligned message, with the
+// final chunk re-based to offset 0. Both the constrained and unconstrained paths
+// must match a plain sha256_var over the whole preimage.
+
+#[test]
+fn test_composed_non_aligned_tail_only() {
+    // 100 bytes: interstitial absorbs one block, end handles a 36-byte tail.
+    let mut full = [0; 100];
+    for i in 0..full.len() {
+        full[i] = ((i * 7 + 1) % 256) as u8;
+    }
+    let state = partial_sha256_var_interstitial(INITIAL_STATE, full, 64);
+    let mut tail = [0; 36];
+    for i in 0..tail.len() {
+        tail[i] = full[64 + i];
+    }
+    let circuit = partial_sha256_var_end(state, tail, 0, 100);
+    // Safety: test function
+    let oracle = unsafe { unconstrained_partial_sha256_var_end(state, tail, 0, 100) };
+    let reference = sha256_var(full, 100);
+    assert_eq(circuit, reference);
+    assert_eq(oracle, reference);
+}
+
+#[test]
+fn test_composed_non_aligned_block_plus_tail() {
+    // 200 bytes: interstitial absorbs two blocks, end handles one block + 8-byte tail.
+    let mut full = [0; 200];
+    for i in 0..full.len() {
+        full[i] = ((i * 7 + 1) % 256) as u8;
+    }
+    let state = partial_sha256_var_interstitial(INITIAL_STATE, full, 128);
+    let mut chunk = [0; 72];
+    for i in 0..chunk.len() {
+        chunk[i] = full[128 + i];
+    }
+    let circuit = partial_sha256_var_end(state, chunk, 64, 200);
+    // Safety: test function
+    let oracle = unsafe { unconstrained_partial_sha256_var_end(state, chunk, 64, 200) };
+    let reference = sha256_var(full, 200);
+    assert_eq(circuit, reference);
+    assert_eq(oracle, reference);
+}
+
 // The interstitial step (whole blocks only) must agree across modes.
 #[test]
 fn fuzz_partial_interstitial_implementations_agree(msg: [u8; 192], num_blocks: u32) {
