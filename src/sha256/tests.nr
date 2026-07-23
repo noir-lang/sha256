@@ -314,6 +314,18 @@ fn test_attach_len_to_msg_block() {
 }
 
 #[test]
+fn regression_test_partial_hash_non_block_aligned() {
+    let mut data = [0; 100];
+    for i in 0..data.len() {
+        // Non-zero, position-dependent bytes so the tail actually changes the hash.
+        data[i] = ((i * 7 + 1) % 256) as u8;
+    }
+    let hash = partial_sha256_var_end(INITIAL_STATE, data, 64, data.len());
+    let correct_hash = sha256_var(data, data.len());
+    assert_eq(hash, correct_hash);
+}
+
+#[test]
 fn fuzz_test_partial_hash(data: [u8; 192]) {
     let mut data0 = [0; 128];
     for i in 0..data0.len() {
