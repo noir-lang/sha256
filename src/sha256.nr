@@ -326,6 +326,7 @@ pub fn partial_sha256_var_end<let N: u32>(
     real_message_size: u32,
 ) -> [u8; 32] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
+    assert(real_message_size >= message_size, "Real message size must be at least the message size");
     if std::runtime::is_unconstrained() {
         // Safety: running as an unconstrained function
         unsafe {
@@ -338,7 +339,9 @@ pub fn partial_sha256_var_end<let N: u32>(
             finalize_last_sha256_block(h, real_message_size, msg)
         }
     } else {
-        let (h, msg_block) = process_full_blocks(msg, message_size, h);
+        // The final chunk is the block-aligned `message_size` plus the trailing partial block.
+        let chunk_size = message_size + (real_message_size % BLOCK_SIZE);
+        let (h, msg_block) = process_full_blocks(msg, chunk_size, h);
         finalize_sha256_blocks(real_message_size, h, msg_block)
     }
 }
