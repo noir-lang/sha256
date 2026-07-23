@@ -271,6 +271,105 @@ fn fuzz_test_partial_hash_interstitial_sha224(data: [u8; 192]) {
     assert_eq(hash, correct_hash);
 }
 
+// Dual-mode coverage for the SHA-224 partial-hash API, mirroring the SHA-256
+// tests. The defect in partial_sha256_var_end is reachable verbatim through
+// partial_sha224_var_end, so these exercise the same non-block-aligned totals.
+
+unconstrained fn unconstrained_partial_sha224_var_end<let N: u32>(
+    h: [u32; 8],
+    msg: [u8; N],
+    message_size: u32,
+    real_message_size: u32,
+) -> sha224_constants::HASH_SHA224 {
+    partial_sha224_var_end(h, msg, message_size, real_message_size)
+}
+
+fn assert_partial_end_matches_reference_sha224(real_message_size: u32) {
+    let mut msg = [0; 192];
+    for i in 0..msg.len() {
+        msg[i] = ((i * 7 + 1) % 256) as u8;
+    }
+    let message_size = (real_message_size / 64) * 64;
+    let hash = partial_sha224_var_end(
+        sha224_constants::INITIAL_STATE_SHA224,
+        msg,
+        message_size,
+        real_message_size,
+    );
+    let reference = sha224_var(msg, real_message_size);
+    assert_eq(hash, reference);
+}
+
+#[test]
+fn test_partial_end_sha224_size_1() {
+    assert_partial_end_matches_reference_sha224(1);
+}
+
+#[test]
+fn test_partial_end_sha224_size_63() {
+    assert_partial_end_matches_reference_sha224(63);
+}
+
+#[test]
+fn test_partial_end_sha224_size_65() {
+    assert_partial_end_matches_reference_sha224(65);
+}
+
+#[test]
+fn test_partial_end_sha224_size_100() {
+    assert_partial_end_matches_reference_sha224(100);
+}
+
+#[test]
+fn test_partial_end_sha224_size_127() {
+    assert_partial_end_matches_reference_sha224(127);
+}
+
+#[test]
+fn test_partial_end_sha224_size_191() {
+    assert_partial_end_matches_reference_sha224(191);
+}
+
+#[test]
+fn test_partial_end_sha224_size_64() {
+    assert_partial_end_matches_reference_sha224(64);
+}
+
+#[test]
+fn fuzz_partial_end_sha224_implementations_agree(msg: [u8; 192], real_message_size: u32) {
+    let real = real_message_size % 193; // 0..=192
+    let message_size = (real / 64) * 64;
+    // Safety: test function
+    let oracle = unsafe {
+        unconstrained_partial_sha224_var_end(
+            sha224_constants::INITIAL_STATE_SHA224,
+            msg,
+            message_size,
+            real,
+        )
+    };
+    let circuit = partial_sha224_var_end(
+        sha224_constants::INITIAL_STATE_SHA224,
+        msg,
+        message_size,
+        real,
+    );
+    assert_eq(circuit, oracle);
+}
+
+#[test]
+fn fuzz_partial_end_sha224_matches_reference(msg: [u8; 192], real_message_size: u32) {
+    let real = real_message_size % 193; // 0..=192
+    let message_size = (real / 64) * 64;
+    let hash = partial_sha224_var_end(
+        sha224_constants::INITIAL_STATE_SHA224,
+        msg,
+        message_size,
+        real,
+    );
+    assert_eq(hash, sha224_var(msg, real));
+}
+
 #[test]
 fn fuzz_test_partial_hash_end_sha224(data: [u8; 192]) {
     let mut data0 = [0; 64];

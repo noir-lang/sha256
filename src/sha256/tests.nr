@@ -374,3 +374,123 @@ fn fuzz_test_partial_hash_end(data: [u8; 192]) {
     let correct_hash = sha256_var(data, data.len());
     assert_eq(hash, correct_hash);
 }
+
+// Dual-mode coverage for the partial-hash API.
+//
+// These tests use the standalone `partial_sha256_var_end` usage (starting from
+// INITIAL_STATE with the whole preimage in `msg`), which is the unambiguous
+// case for a non-block-aligned total: the final chunk begins at absolute offset
+// 0, so `message_size` (full blocks) and the trailing `real_message_size % 64`
+// bytes both index into `msg` directly.
+
+unconstrained fn unconstrained_partial_sha256_var_end<let N: u32>(
+    h: [u32; 8],
+    msg: [u8; N],
+    message_size: u32,
+    real_message_size: u32,
+) -> [u8; 32] {
+    partial_sha256_var_end(h, msg, message_size, real_message_size)
+}
+
+unconstrained fn unconstrained_partial_sha256_var_interstitial<let N: u32>(
+    h: [u32; 8],
+    msg: [u8; N],
+    message_size: u32,
+) -> [u32; 8] {
+    partial_sha256_var_interstitial(h, msg, message_size)
+}
+
+fn assert_partial_end_matches_reference(real_message_size: u32) {
+    let mut msg = [0; 192];
+    for i in 0..msg.len() {
+        msg[i] = ((i * 7 + 1) % 256) as u8;
+    }
+    let message_size = (real_message_size / 64) * 64;
+    let hash = partial_sha256_var_end(INITIAL_STATE, msg, message_size, real_message_size);
+    let reference = sha256_var(msg, real_message_size);
+    assert_eq(hash, reference);
+}
+
+// Non-block-aligned totals: should equal a plain sha256_var over the same bytes.
+#[test]
+fn test_partial_end_size_1() {
+    assert_partial_end_matches_reference(1);
+}
+
+#[test]
+fn test_partial_end_size_33() {
+    assert_partial_end_matches_reference(33);
+}
+
+#[test]
+fn test_partial_end_size_63() {
+    assert_partial_end_matches_reference(63);
+}
+
+#[test]
+fn test_partial_end_size_65() {
+    assert_partial_end_matches_reference(65);
+}
+
+#[test]
+fn test_partial_end_size_100() {
+    assert_partial_end_matches_reference(100);
+}
+
+#[test]
+fn test_partial_end_size_127() {
+    assert_partial_end_matches_reference(127);
+}
+
+#[test]
+fn test_partial_end_size_129() {
+    assert_partial_end_matches_reference(129);
+}
+
+#[test]
+fn test_partial_end_size_191() {
+    assert_partial_end_matches_reference(191);
+}
+
+// Block-aligned totals: these should already pass today.
+#[test]
+fn test_partial_end_size_64() {
+    assert_partial_end_matches_reference(64);
+}
+
+#[test]
+fn test_partial_end_size_128() {
+    assert_partial_end_matches_reference(128);
+}
+
+// Constrained vs unconstrained must agree for any total size.
+#[test]
+fn fuzz_partial_end_implementations_agree(msg: [u8; 192], real_message_size: u32) {
+    let real = real_message_size % 193; // 0..=192
+    let message_size = (real / 64) * 64;
+    // Safety: test function
+    let oracle =
+        unsafe { unconstrained_partial_sha256_var_end(INITIAL_STATE, msg, message_size, real) };
+    let circuit = partial_sha256_var_end(INITIAL_STATE, msg, message_size, real);
+    assert_eq(circuit, oracle);
+}
+
+// Constrained partial-end must match the reference sha256_var for any total size.
+#[test]
+fn fuzz_partial_end_matches_reference(msg: [u8; 192], real_message_size: u32) {
+    let real = real_message_size % 193; // 0..=192
+    let message_size = (real / 64) * 64;
+    let hash = partial_sha256_var_end(INITIAL_STATE, msg, message_size, real);
+    assert_eq(hash, sha256_var(msg, real));
+}
+
+// The interstitial step (whole blocks only) must agree across modes.
+#[test]
+fn fuzz_partial_interstitial_implementations_agree(msg: [u8; 192], num_blocks: u32) {
+    let message_size = (num_blocks % 4) * 64; // 0, 64, 128, 192
+    // Safety: test function
+    let oracle =
+        unsafe { unconstrained_partial_sha256_var_interstitial(INITIAL_STATE, msg, message_size) };
+    let circuit = partial_sha256_var_interstitial(INITIAL_STATE, msg, message_size);
+    assert_eq(circuit, oracle);
+}
