@@ -266,11 +266,7 @@ fn add_padding_byte_and_compress_if_needed(
     }
 }
 
-pub(crate) fn finalize_sha256_blocks(
-    message_size: u32,
-    mut h: STATE,
-    mut msg_block: MSG_BLOCK,
-) -> HASH {
+pub(crate) fn finalize_sha256_blocks(message_size: u32, h: STATE, msg_block: MSG_BLOCK) -> HASH {
     let msg_byte_ptr = message_size % BLOCK_SIZE;
 
     let (h, mut msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
@@ -291,7 +287,7 @@ pub(crate) fn finalize_sha256_blocks(
  * @return the intermediate hash state after compressing in msg to h
  */
 pub fn partial_sha256_var_interstitial<let N: u32>(
-    mut h: [u32; 8],
+    h: [u32; 8],
     msg: [u8; N],
     message_size: u32,
 ) -> [u32; 8] {

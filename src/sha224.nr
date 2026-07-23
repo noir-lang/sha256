@@ -59,7 +59,7 @@ unconstrained fn __sha224_var<let N: u32>(
  * @return finalized sha24 hash
  */
 pub fn partial_sha224_var_end<let N: u32>(
-    mut h: [u32; 8],
+    h: [u32; 8],
     msg: [u8; N],
     message_size: u32,
     real_message_size: u32,
