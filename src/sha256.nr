@@ -296,6 +296,7 @@ pub fn partial_sha256_var_interstitial<let N: u32>(
     message_size: u32,
 ) -> [u32; 8] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
+    assert(message_size <= N, "Message does not fit in the input array");
     if std::runtime::is_unconstrained() {
         // Safety: running as an unconstrained function
         unsafe {
@@ -329,6 +330,11 @@ pub fn partial_sha256_var_end<let N: u32>(
     assert(
         real_message_size >= message_size,
         "Real message size must be at least the message size",
+    );
+    // The block-aligned prefix plus the trailing partial block must lie within `msg`.
+    assert(
+        message_size + real_message_size % BLOCK_SIZE <= N,
+        "Message does not fit in the input array",
     );
     if std::runtime::is_unconstrained() {
         // Safety: running as an unconstrained function
