@@ -484,6 +484,34 @@ fn fuzz_partial_end_matches_reference(msg: [u8; 192], real_message_size: u32) {
     assert_eq(hash, sha256_var(msg, real));
 }
 
+// Regression tests: the size arguments must not describe bytes outside `msg`.
+//
+// If `message_size` plus the trailing `real_message_size % 64` bytes exceeds the
+// array capacity `N`, the call reads past the end of `msg`. This must be rejected
+// (in both runtimes) rather than silently hashing the missing bytes as zeros in
+// the constrained path while the unconstrained path reads out of bounds.
+
+#[test(should_fail_with = "does not fit in the input array")]
+fn regression_partial_end_tail_beyond_capacity() {
+    // msg holds 64 bytes, but real=100 claims a 36-byte tail at msg[64..100].
+    let msg = [7; 64];
+    let _ = partial_sha256_var_end(INITIAL_STATE, msg, 64, 100);
+}
+
+#[test(should_fail_with = "does not fit in the input array")]
+fn regression_partial_end_tail_beyond_capacity_unconstrained() {
+    let msg = [7; 64];
+    // Safety: test function
+    let _ = unsafe { unconstrained_partial_sha256_var_end(INITIAL_STATE, msg, 64, 100) };
+}
+
+#[test(should_fail_with = "does not fit in the input array")]
+fn regression_partial_interstitial_message_beyond_capacity() {
+    // message_size (128) exceeds the array capacity N (64).
+    let msg = [7; 64];
+    let _ = partial_sha256_var_interstitial(INITIAL_STATE, msg, 128);
+}
+
 // Composed (interstitial + end) hashing of a non-block-aligned message, with the
 // final chunk re-based to offset 0. Both the constrained and unconstrained paths
 // must match a plain sha256_var over the whole preimage.

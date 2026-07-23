@@ -237,6 +237,14 @@ fn same_msg_len_variable_padding() {
     assert_eq(var_length_hash_576, var_full_length_hash);
 }
 
+// Regression test: partial_sha224_var_end delegates to partial_sha256_var_end, so
+// the same out-of-capacity guard must reject a tail that extends beyond `msg`.
+#[test(should_fail_with = "does not fit in the input array")]
+fn regression_partial_end_tail_beyond_capacity_sha224() {
+    let msg = [7; 64];
+    let _ = partial_sha224_var_end(sha224_constants::INITIAL_STATE_SHA224, msg, 64, 100);
+}
+
 #[test]
 fn fuzz_test_partial_hash_sha224(data: [u8; 192]) {
     let mut data0 = [0; 128];
