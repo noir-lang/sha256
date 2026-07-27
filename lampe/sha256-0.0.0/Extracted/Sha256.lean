@@ -79,7 +79,7 @@ noir_def «sha256-0.0.0»::sha256::build_msg_block<N: u32>(msg: Array<u8, N: u32
     let msg_end = (#_uAdd returning u32)(msg_start, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)());
     let max_read_index = («std-1.0.0-beta.14»::cmp::min<u32> as λ(u32, u32) -> u32)(message_size, msg_end);
     let msg_item = (#_ref returning & Field)((0: Field));
-    for k in msg_start .. msg_end do {
+    for k in msg_start .. (#_uAdd returning u32)(msg_end, (1: u32)) do {
       if (#_bAnd returning bool)((#_uNeq returning bool)(k, msg_start), (#_uEq returning bool)((#_uRem returning u32)(k, («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)()), (0: u32))) then {
         let msg_block_index = (#_uSub returning u32)((#_uDiv returning u32)((#_uSub returning u32)(k, msg_start), («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)()), (1: u32));
         (#_assert returning Unit)((#_fEq returning bool)((#_cast returning Field)((#_arrayIndex returning u32)(msg_block, (#_cast returning u32)(msg_block_index))), (#_readRef returning Field)(msg_item)));
