@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 noir_def «sha256-0.0.0»::sha224::sha224_var<N: u32>(msg: Array<u8, N: u32>, message_size: u32) -> @«sha256-0.0.0»::sha224::constants::HASH_SHA224<> := {
   (#_assert returning Unit)((#_uLeq returning bool)(message_size, uConst!(N: u32)));
   if (#_isUnconstrained returning bool)() then {
@@ -12,12 +14,12 @@ noir_def «sha256-0.0.0»::sha224::sha224_var<N: u32>(msg: Array<u8, N: u32>, me
   } else {
     let (h, msg_block) = («sha256-0.0.0»::sha256::process_full_blocks<N: u32> as λ(Array<u8, N: u32>, u32, @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(msg, message_size, («sha256-0.0.0»::sha224::constants::INITIAL_STATE_SHA224<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)());
     let hash = («sha256-0.0.0»::sha256::finalize_sha256_blocks<> as λ(u32, @«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(message_size, h, msg_block);
-    let mut hash_sha224 = (#_mkRepeatedArray returning Array<u8, 28: u32>)((0: u8));
+    let hash_sha224 = (#_ref returning & @«sha256-0.0.0»::sha224::constants::HASH_SHA224<>)((#_mkRepeatedArray returning Array<u8, 28: u32>)((0: u8)));
     for i in (0: u32) .. (28: u32) do {
       (hash_sha224[i]: u8) = (#_arrayIndex returning u8)(hash, (#_cast returning u32)(i));
       #_skip
     };
-    hash_sha224
+    (#_readRef returning Array<u8, 28: u32>)(hash_sha224)
   }
 }
 
@@ -25,14 +27,14 @@ noir_def «sha256-0.0.0»::sha224::__sha224_var<N: u32>(msg: Array<u8, N: u32>, 
   (#_fresh returning @«sha256-0.0.0»::sha224::constants::HASH_SHA224<>)()
 }
 
-noir_def «sha256-0.0.0»::sha224::partial_sha224_var_end<N: u32>(mut h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32, real_message_size: u32) -> @«sha256-0.0.0»::sha224::constants::HASH_SHA224<> := {
+noir_def «sha256-0.0.0»::sha224::partial_sha224_var_end<N: u32>(h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32, real_message_size: u32) -> @«sha256-0.0.0»::sha224::constants::HASH_SHA224<> := {
   let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<N: u32> as λ(Array<u32, 8: u32>, Array<u8, N: u32>, u32, u32) -> Array<u8, 32: u32>)(h, msg, message_size, real_message_size);
-  let mut hash_sha224 = (#_mkRepeatedArray returning Array<u8, 28: u32>)((0: u8));
+  let hash_sha224 = (#_ref returning & @«sha256-0.0.0»::sha224::constants::HASH_SHA224<>)((#_mkRepeatedArray returning Array<u8, 28: u32>)((0: u8)));
   for i in (0: u32) .. (28: u32) do {
     (hash_sha224[i]: u8) = (#_arrayIndex returning u8)(hash, (#_cast returning u32)(i));
     #_skip
   };
-  hash_sha224
+  (#_readRef returning Array<u8, 28: u32>)(hash_sha224)
 }
 
 noir_def «sha256-0.0.0»::sha224::equivalence_test::test_implementations_agree<>(msg: Array<u8, 100: u32>, message_size: u32) -> Unit := {

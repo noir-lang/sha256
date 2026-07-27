@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 noir_def «sha256-0.0.0»::sha256::sha256<N: u32>(input: Array<u8, N: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<> := {
   («sha256-0.0.0»::sha256::digest<N: u32> as λ(Array<u8, N: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input)
 }
@@ -22,10 +24,10 @@ noir_def «sha256-0.0.0»::sha256::sha256_var<N: u32>(msg: Array<u8, N: u32>, me
 noir_def «sha256-0.0.0»::sha256::process_full_blocks<N: u32>(msg: Array<u8, N: u32>, message_size: u32, initial_state: @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> > := {
   if (#_isUnconstrained returning bool)() then {
     let num_full_blocks = (#_uDiv returning u32)(message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)());
-    let mut h = initial_state;
+    let h = (#_ref returning & @«sha256-0.0.0»::sha256::constants::STATE<>)(initial_state);
     for i in (0: u32) .. num_full_blocks do {
       let msg_block = («sha256-0.0.0»::sha256::build_msg_block<N: u32> as λ(Array<u8, N: u32>, u32, u32) -> @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>)(msg, message_size, (#_uMul returning u32)((«sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)(), i));
-      h = (#_sha256Compression returning Array<u32, 8: u32>)(msg_block, h);
+      h = (#_sha256Compression returning Array<u32, 8: u32>)(msg_block, (#_readRef returning Array<u32, 8: u32>)(h));
       #_skip
     };
     let msg_byte_ptr = (#_uRem returning u32)(message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)());
@@ -36,11 +38,11 @@ noir_def «sha256-0.0.0»::sha256::process_full_blocks<N: u32>(msg: Array<u8, N:
     } else {
       (#_mkRepeatedArray returning Array<u32, 16: u32>)((0: u32))
     };
-    (#_makeData returning Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(h, msg_block)
+    (#_makeData returning Tuple<Array<u32, 8: u32>, Array<u32, 16: u32> >)((#_readRef returning Array<u32, 8: u32>)(h), msg_block)
   } else {
     let num_blocks = (#_uDiv returning u32)(uConst!(N: u32), («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)());
-    let mut blocks = (#_zeroed returning Array<Array<u32, 16: u32>, ((N / 64) + 1): u32>)();
-    let mut states = (#_mkRepeatedArray returning Array<@«sha256-0.0.0»::sha256::constants::STATE<>, ((N / 64) + 1): u32>)(initial_state);
+    let blocks = (#_ref returning & Array<@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, ((N / 64) + 1): u32>)((#_zeroed returning Array<Array<u32, 16: u32>, ((N / 64) + 1): u32>)());
+    let states = (#_ref returning & Array<@«sha256-0.0.0»::sha256::constants::STATE<>, ((N / 64) + 1): u32>)((#_mkRepeatedArray returning Array<Array<u32, 8: u32>, ((N / 64) + 1): u32>)(initial_state));
     let first_partially_filled_block_index = if (#_uGeq returning bool)(uConst!(N: u32), («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)()) then {
       (#_uDiv returning u32)(message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)())
     } else {
@@ -51,8 +53,8 @@ noir_def «sha256-0.0.0»::sha256::process_full_blocks<N: u32>(msg: Array<u8, N:
       let new_msg_block = («sha256-0.0.0»::sha256::build_msg_block<N: u32> as λ(Array<u8, N: u32>, u32, u32) -> @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>)(msg, message_size, msg_start);
       (blocks[i]: Array<u32, 16: u32>) = new_msg_block;
       {
-        let i_4570 = (#_uAdd returning u32)(i, (1: u32));
-        (states[i_4570]: Array<u32, 8: u32>) = (#_sha256Compression returning Array<u32, 8: u32>)(new_msg_block, (#_arrayIndex returning Array<u32, 8: u32>)(states, (#_cast returning u32)(i)));
+        let i_4813 = (#_uAdd returning u32)(i, (1: u32));
+        (states[i_4813]: Array<u32, 8: u32>) = (#_sha256Compression returning Array<u32, 8: u32>)(new_msg_block, (#_arrayIndex returning Array<u32, 8: u32>)((#_readRef returning Array<Array<u32, 8: u32>, ((N / 64) + 1): u32>)(states), (#_cast returning u32)(i)));
         #_skip
       }
     };
@@ -61,7 +63,7 @@ noir_def «sha256-0.0.0»::sha256::process_full_blocks<N: u32>(msg: Array<u8, N:
       (blocks[num_blocks]: Array<u32, 16: u32>) = new_msg_block;
       #_skip
     };
-    (#_makeData returning Tuple<Array<u32, 8: u32>, Array<u32, 16: u32> >)((#_arrayIndex returning Array<u32, 8: u32>)(states, (#_cast returning u32)(first_partially_filled_block_index)), (#_arrayIndex returning Array<u32, 16: u32>)(blocks, (#_cast returning u32)(first_partially_filled_block_index)))
+    (#_makeData returning Tuple<Array<u32, 8: u32>, Array<u32, 16: u32> >)((#_arrayIndex returning Array<u32, 8: u32>)((#_readRef returning Array<Array<u32, 8: u32>, ((N / 64) + 1): u32>)(states), (#_cast returning u32)(first_partially_filled_block_index)), (#_arrayIndex returning Array<u32, 16: u32>)((#_readRef returning Array<Array<u32, 16: u32>, ((N / 64) + 1): u32>)(blocks), (#_cast returning u32)(first_partially_filled_block_index)))
   }
 }
 
@@ -76,11 +78,11 @@ noir_def «sha256-0.0.0»::sha256::build_msg_block<N: u32>(msg: Array<u8, N: u32
   if (#_bNot returning bool)((#_isUnconstrained returning bool)()) then {
     let msg_end = (#_uAdd returning u32)(msg_start, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)());
     let max_read_index = («std-1.0.0-beta.14»::cmp::min<u32> as λ(u32, u32) -> u32)(message_size, msg_end);
-    let mut msg_item = (0: Field);
+    let msg_item = (#_ref returning & Field)((0: Field));
     for k in msg_start .. msg_end do {
       if (#_bAnd returning bool)((#_uNeq returning bool)(k, msg_start), (#_uEq returning bool)((#_uRem returning u32)(k, («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)()), (0: u32))) then {
         let msg_block_index = (#_uSub returning u32)((#_uDiv returning u32)((#_uSub returning u32)(k, msg_start), («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)()), (1: u32));
-        (#_assert returning Unit)((#_fEq returning bool)((#_cast returning Field)((#_arrayIndex returning u32)(msg_block, (#_cast returning u32)(msg_block_index))), msg_item));
+        (#_assert returning Unit)((#_fEq returning bool)((#_cast returning Field)((#_arrayIndex returning u32)(msg_block, (#_cast returning u32)(msg_block_index))), (#_readRef returning Field)(msg_item)));
         msg_item = (0: Field);
         #_skip
       };
@@ -89,7 +91,7 @@ noir_def «sha256-0.0.0»::sha256::build_msg_block<N: u32>(msg: Array<u8, N: u32
       } else {
         (0: u8)
       };
-      msg_item = (#_fAdd returning Field)((#_fMul returning Field)(msg_item, (#_cast returning Field)((«sha256-0.0.0»::sha256::constants::TWO_POW_8<> as λ() -> u32)())), (#_cast returning Field)(msg_byte));
+      msg_item = (#_fAdd returning Field)((#_fMul returning Field)((#_readRef returning Field)(msg_item), (#_cast returning Field)((«sha256-0.0.0»::sha256::constants::TWO_POW_8<> as λ() -> u32)())), (#_cast returning Field)(msg_byte));
       #_skip
     };
     #_skip
@@ -101,58 +103,69 @@ noir_def «sha256-0.0.0»::sha256::encode_len<>(message_size: u32) -> Tuple<u32,
   (#_fresh returning Tuple<u32, u32>)()
 }
 
-noir_def «sha256-0.0.0»::sha256::attach_len_to_msg_block<>(mut msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, message_size: u32) -> @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> := {
+noir_def «sha256-0.0.0»::sha256::attach_len_to_msg_block<>(msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, message_size: u32) -> @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> := {
+  let msg_block = (#_ref returning & @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>)(msg_block);
+  {
   let (lo, hi) = {
     («sha256-0.0.0»::sha256::encode_len<> as λ(u32) -> Tuple<u32, u32>)(message_size)
   };
   (#_assert returning Unit)((#_fEq returning bool)((#_fMul returning Field)((8: Field), (#_cast returning Field)(message_size)), (#_fAdd returning Field)((#_cast returning Field)(lo), (#_fMul returning Field)((#_cast returning Field)(hi), («sha256-0.0.0»::sha256::constants::TWO_POW_32<> as λ() -> Field)()))));
   (msg_block[(«sha256-0.0.0»::sha256::constants::INT_SIZE_PTR<> as λ() -> u32)()]: u32) = hi;
   {
-    let i_4594 = (#_uAdd returning u32)((«sha256-0.0.0»::sha256::constants::INT_SIZE_PTR<> as λ() -> u32)(), (1: u32));
-    (msg_block[i_4594]: u32) = lo;
+    let i_4837 = (#_uAdd returning u32)((«sha256-0.0.0»::sha256::constants::INT_SIZE_PTR<> as λ() -> u32)(), (1: u32));
+    (msg_block[i_4837]: u32) = lo;
     #_skip
   };
-  msg_block
+  (#_readRef returning Array<u32, 16: u32>)(msg_block)
+}
 }
 
-noir_def «sha256-0.0.0»::sha256::hash_final_block<>(msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, mut state: @«sha256-0.0.0»::sha256::constants::STATE<>) -> @«sha256-0.0.0»::sha256::constants::HASH<> := {
-  state = (#_sha256Compression returning Array<u32, 8: u32>)(msg_block, state);
-  let mut out_h = (#_mkRepeatedArray returning Array<u8, 32: u32>)((0: u8));
+noir_def «sha256-0.0.0»::sha256::hash_final_block<>(msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, state: @«sha256-0.0.0»::sha256::constants::STATE<>) -> @«sha256-0.0.0»::sha256::constants::HASH<> := {
+  let state = (#_ref returning & @«sha256-0.0.0»::sha256::constants::STATE<>)(state);
+  {
+  state = (#_sha256Compression returning Array<u32, 8: u32>)(msg_block, (#_readRef returning Array<u32, 8: u32>)(state));
+  let out_h = (#_ref returning & @«sha256-0.0.0»::sha256::constants::HASH<>)((#_mkRepeatedArray returning Array<u8, 32: u32>)((0: u8)));
   for j in (0: u32) .. (8: u32) do {
-    let h_bytes = («std-1.0.0-beta.14»::field::to_be_bytes<4: u32> as λ(Field) -> Array<u8, 4: u32>)((#_cast returning Field)((#_arrayIndex returning u32)(state, (#_cast returning u32)(j))));
+    let h_bytes = («std-1.0.0-beta.14»::field::to_be_bytes<4: u32> as λ(Field) -> Array<u8, 4: u32>)((#_cast returning Field)((#_arrayIndex returning u32)((#_readRef returning Array<u32, 8: u32>)(state), (#_cast returning u32)(j))));
     for k in (0: u32) .. (4: u32) do {
-      let i_4599 = (#_uAdd returning u32)((#_uMul returning u32)((4: u32), j), k);
-      (out_h[i_4599]: u8) = (#_arrayIndex returning u8)(h_bytes, (#_cast returning u32)(k));
+      let i_4842 = (#_uAdd returning u32)((#_uMul returning u32)((4: u32), j), k);
+      (out_h[i_4842]: u8) = (#_arrayIndex returning u8)(h_bytes, (#_cast returning u32)(k));
       #_skip
     };
     #_skip
   };
-  out_h
+  (#_readRef returning Array<u8, 32: u32>)(out_h)
+}
 }
 
 noir_global_def «sha256-0.0.0»::sha256::PADDING_BIT_TABLE: Array<u32, 4: u32> = (#_mkArray returning Array<u32, 4: u32>)((#_uMul returning u32)((#_uShl returning u32)((1: u32), (7: u32)), («sha256-0.0.0»::sha256::constants::TWO_POW_24<> as λ() -> u32)()), (#_uMul returning u32)((#_uShl returning u32)((1: u32), (7: u32)), («sha256-0.0.0»::sha256::constants::TWO_POW_16<> as λ() -> u32)()), (#_uMul returning u32)((#_uShl returning u32)((1: u32), (7: u32)), («sha256-0.0.0»::sha256::constants::TWO_POW_8<> as λ() -> u32)()), (#_uShl returning u32)((1: u32), (7: u32)));
 
-noir_def «sha256-0.0.0»::sha256::add_padding_byte_and_compress_if_needed<>(mut msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, msg_byte_ptr: @«sha256-0.0.0»::sha256::constants::BLOCK_BYTE_PTR<>, h: @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> > := {
+noir_def «sha256-0.0.0»::sha256::add_padding_byte_and_compress_if_needed<>(msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, msg_byte_ptr: @«sha256-0.0.0»::sha256::constants::BLOCK_BYTE_PTR<>, h: @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> > := {
+  let msg_block = (#_ref returning & @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>)(msg_block);
+  {
   let index = (#_uDiv returning u32)(msg_byte_ptr, («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)());
-  (msg_block[index]: u32) = (#_uAdd returning u32)((#_arrayIndex returning u32)(msg_block, (#_cast returning u32)(index)), (#_arrayIndex returning u32)((«sha256-0.0.0»::sha256::PADDING_BIT_TABLE<> as λ() -> Array<u32, 4: u32>)(), (#_cast returning u32)((#_uRem returning u32)(msg_byte_ptr, («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)()))));
+  (msg_block[index]: u32) = (#_uAdd returning u32)((#_arrayIndex returning u32)((#_readRef returning Array<u32, 16: u32>)(msg_block), (#_cast returning u32)(index)), (#_arrayIndex returning u32)((«sha256-0.0.0»::sha256::PADDING_BIT_TABLE<> as λ() -> Array<u32, 4: u32>)(), (#_cast returning u32)((#_uRem returning u32)(msg_byte_ptr, («sha256-0.0.0»::sha256::constants::INT_SIZE<> as λ() -> u32)()))));
   if (#_uGeq returning bool)(msg_byte_ptr, («sha256-0.0.0»::sha256::constants::MSG_SIZE_PTR<> as λ() -> u32)()) then {
-    let h = (#_sha256Compression returning Array<u32, 8: u32>)(msg_block, h);
-    msg_block = (#_mkRepeatedArray returning Array<u32, 16: u32>)((0: u32));
-    (#_makeData returning Tuple<Array<u32, 8: u32>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(h, msg_block)
+    let h = (#_sha256Compression returning Array<u32, 8: u32>)((#_readRef returning Array<u32, 16: u32>)(msg_block), h);
+    let msg_block = (#_mkRepeatedArray returning Array<u32, 16: u32>)((0: u32));
+    (#_makeData returning Tuple<Array<u32, 8: u32>, Array<u32, 16: u32> >)(h, msg_block)
   } else {
-    (#_makeData returning Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(h, msg_block)
+    (#_makeData returning Tuple<Array<u32, 8: u32>, Array<u32, 16: u32> >)(h, (#_readRef returning Array<u32, 16: u32>)(msg_block))
   }
+}
 }
 
 noir_def «sha256-0.0.0»::sha256::finalize_sha256_blocks<>(message_size: u32, h: @«sha256-0.0.0»::sha256::constants::STATE<>, msg_block: @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>) -> @«sha256-0.0.0»::sha256::constants::HASH<> := {
   let msg_byte_ptr = (#_uRem returning u32)(message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)());
-  let (h, mut msg_block) = («sha256-0.0.0»::sha256::add_padding_byte_and_compress_if_needed<> as λ(@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, @«sha256-0.0.0»::sha256::constants::BLOCK_BYTE_PTR<>, @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(msg_block, msg_byte_ptr, h);
-  msg_block = («sha256-0.0.0»::sha256::attach_len_to_msg_block<> as λ(@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, u32) -> @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>)(msg_block, message_size);
-  («sha256-0.0.0»::sha256::hash_final_block<> as λ(@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, @«sha256-0.0.0»::sha256::constants::STATE<>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(msg_block, h)
+  let (h, msg_block) = («sha256-0.0.0»::sha256::add_padding_byte_and_compress_if_needed<> as λ(@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, @«sha256-0.0.0»::sha256::constants::BLOCK_BYTE_PTR<>, @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(msg_block, msg_byte_ptr, h);
+  let msg_block = (#_ref returning & Array<u32, 16: u32>)(msg_block);
+  msg_block = («sha256-0.0.0»::sha256::attach_len_to_msg_block<> as λ(@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, u32) -> @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>)((#_readRef returning Array<u32, 16: u32>)(msg_block), message_size);
+  («sha256-0.0.0»::sha256::hash_final_block<> as λ(@«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>, @«sha256-0.0.0»::sha256::constants::STATE<>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u32, 16: u32>)(msg_block), h)
 }
 
 noir_def «sha256-0.0.0»::sha256::partial_sha256_var_interstitial<N: u32>(h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32) -> Array<u32, 8: u32> := {
   (#_assert returning Unit)((#_uEq returning bool)((#_uRem returning u32)(message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)()), (0: u32)));
+  (#_assert returning Unit)((#_uLeq returning bool)(message_size, uConst!(N: u32)));
   if (#_isUnconstrained returning bool)() then {
     («sha256-0.0.0»::sha256::__sha_partial_var_interstitial<N: u32> as λ(Array<u32, 8: u32>, Array<u8, N: u32>, u32) -> Array<u32, 8: u32>)(h, msg, message_size)
   } else {
@@ -162,21 +175,30 @@ noir_def «sha256-0.0.0»::sha256::partial_sha256_var_interstitial<N: u32>(h: Ar
 }
 
 noir_def «sha256-0.0.0»::sha256::partial_sha256_var_end<N: u32>(h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32, real_message_size: u32) -> Array<u8, 32: u32> := {
+  let h = (#_ref returning & Array<u32, 8: u32>)(h);
+  {
   (#_assert returning Unit)((#_uEq returning bool)((#_uRem returning u32)(message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)()), (0: u32)));
+  (#_assert returning Unit)((#_uGeq returning bool)(real_message_size, message_size));
+  (#_assert returning Unit)((#_uLeq returning bool)((#_uAdd returning u32)(message_size, (#_uRem returning u32)(real_message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)())), uConst!(N: u32)));
   if (#_isUnconstrained returning bool)() then {
-    let h = («sha256-0.0.0»::sha256::__sha_partial_var_interstitial<N: u32> as λ(Array<u32, 8: u32>, Array<u8, N: u32>, u32) -> Array<u32, 8: u32>)(h, msg, message_size);
-    («sha256-0.0.0»::sha256::finalize_last_sha256_block<N: u32> as λ(@«sha256-0.0.0»::sha256::constants::STATE<>, u32, Array<u8, N: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(h, real_message_size, msg)
+    h = («sha256-0.0.0»::sha256::__sha_partial_var_interstitial<N: u32> as λ(Array<u32, 8: u32>, Array<u8, N: u32>, u32) -> Array<u32, 8: u32>)((#_readRef returning Array<u32, 8: u32>)(h), msg, message_size);
+    («sha256-0.0.0»::sha256::finalize_last_sha256_block<N: u32> as λ(@«sha256-0.0.0»::sha256::constants::STATE<>, u32, u32, Array<u8, N: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u32, 8: u32>)(h), message_size, real_message_size, msg)
   } else {
-    let (h, msg_block) = («sha256-0.0.0»::sha256::process_full_blocks<N: u32> as λ(Array<u8, N: u32>, u32, @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(msg, message_size, h);
+    let chunk_size = (#_uAdd returning u32)(message_size, (#_uRem returning u32)(real_message_size, («sha256-0.0.0»::sha256::constants::BLOCK_SIZE<> as λ() -> u32)()));
+    let (h, msg_block) = («sha256-0.0.0»::sha256::process_full_blocks<N: u32> as λ(Array<u8, N: u32>, u32, @«sha256-0.0.0»::sha256::constants::STATE<>) -> Tuple<@«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<> >)(msg, chunk_size, (#_readRef returning Array<u32, 8: u32>)(h));
     («sha256-0.0.0»::sha256::finalize_sha256_blocks<> as λ(u32, @«sha256-0.0.0»::sha256::constants::STATE<>, @«sha256-0.0.0»::sha256::constants::MSG_BLOCK<>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(real_message_size, h, msg_block)
   }
 }
-
-noir_def «sha256-0.0.0»::sha256::__sha_partial_var_interstitial<N: u32>(mut h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32) -> Array<u32, 8: u32> := {
-  (#_fresh returning Array<u32, 8: u32>)()
 }
 
-noir_def «sha256-0.0.0»::sha256::finalize_last_sha256_block<N: u32>(mut h: @«sha256-0.0.0»::sha256::constants::STATE<>, message_size: u32, msg: Array<u8, N: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<> := {
+noir_def «sha256-0.0.0»::sha256::__sha_partial_var_interstitial<N: u32>(h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32) -> Array<u32, 8: u32> := {
+  let h = (#_ref returning & Array<u32, 8: u32>)(h);
+  {
+  (#_fresh returning Array<u32, 8: u32>)()
+}
+}
+
+noir_def «sha256-0.0.0»::sha256::finalize_last_sha256_block<N: u32>(h: @«sha256-0.0.0»::sha256::constants::STATE<>, partial_message_size: u32, real_message_size: u32, msg: Array<u8, N: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<> := {
   (#_fresh returning @«sha256-0.0.0»::sha256::constants::HASH<>)()
 }
 

@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 def «sha256-0.0.0».Lib.env : Env := Env.mk
   []
   []

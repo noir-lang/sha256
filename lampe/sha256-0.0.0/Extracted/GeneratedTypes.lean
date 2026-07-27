@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 noir_type_alias «sha256-0.0.0»::sha256::constants::BLOCK_BYTE_PTR<> := u32;
 
 noir_type_alias «sha256-0.0.0»::sha256::constants::INT_BLOCK<> := Array<u32, 16: u32>;

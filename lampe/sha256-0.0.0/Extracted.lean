@@ -4,15 +4,23 @@ import «sha256-0.0.0».Extracted.GeneratedTypes
 import «sha256-0.0.0».Extracted.Lib
 import «sha256-0.0.0».Extracted.Sha224
 import «sha256-0.0.0».Extracted.Sha224.Constants
+import «sha256-0.0.0».Extracted.Sha224.OracleTests
+import «sha256-0.0.0».Extracted.Sha224.Tests
 import «sha256-0.0.0».Extracted.Sha256
 import «sha256-0.0.0».Extracted.Sha256.Constants
+import «sha256-0.0.0».Extracted.Sha256.OracleTests
+import «sha256-0.0.0».Extracted.Sha256.Tests
 import «std-1.0.0-beta.14».Extracted
 
 namespace «sha256-0.0.0»
 
 def env := Lib.env
   ++ Sha224.Constants.env
+  ++ Sha224.OracleTests.env
+  ++ Sha224.Tests.env
   ++ Sha224.env
   ++ Sha256.Constants.env
+  ++ Sha256.OracleTests.env
+  ++ Sha256.Tests.env
   ++ Sha256.env
   ++ «std-1.0.0-beta.14».env

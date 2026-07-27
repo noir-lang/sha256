@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 noir_def «sha256-0.0.0»::sha224::oracle_tests::sha224_hash_oracle<>(input: Vector<u8>) -> Array<u8, 28: u32> := {
   (#_fresh returning Array<u8, 28: u32>)()
 }

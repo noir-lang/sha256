@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 noir_def «sha256-0.0.0»::sha256::tests::test_sha256_1<>(input: Array<u8, 1: u32>, len: u32) -> Array<u8, 32: u32> := {
   («sha256-0.0.0»::sha256::sha256_var<1: u32> as λ(Array<u8, 1: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input, len)
 }
@@ -80,10 +82,10 @@ noir_def «sha256-0.0.0»::sha256::tests::msg_big_no_padding<>() -> Unit := {
 
 noir_def «sha256-0.0.0»::sha256::tests::same_msg_len_variable_padding<>() -> Unit := {
   let input = (#_mkArray returning Array<u8, 448: u32>)((29: u8), (81: u8), (165: u8), (84: u8), (243: u8), (114: u8), (101: u8), (37: u8), (242: u8), (146: u8), (127: u8), (99: u8), (69: u8), (145: u8), (39: u8), (72: u8), (213: u8), (39: u8), (253: u8), (179: u8), (218: u8), (37: u8), (217: u8), (201: u8), (172: u8), (93: u8), (198: u8), (50: u8), (249: u8), (70: u8), (15: u8), (30: u8), (162: u8), (112: u8), (187: u8), (40: u8), (140: u8), (9: u8), (236: u8), (53: u8), (32: u8), (44: u8), (38: u8), (163: u8), (113: u8), (254: u8), (192: u8), (197: u8), (44: u8), (89: u8), (71: u8), (130: u8), (169: u8), (242: u8), (17: u8), (211: u8), (214: u8), (72: u8), (19: u8), (178: u8), (186: u8), (168: u8), (147: u8), (127: u8), (99: u8), (101: u8), (252: u8), (227: u8), (8: u8), (147: u8), (150: u8), (85: u8), (97: u8), (158: u8), (17: u8), (107: u8), (218: u8), (244: u8), (82: u8), (113: u8), (247: u8), (91: u8), (208: u8), (214: u8), (60: u8), (244: u8), (87: u8), (137: u8), (173: u8), (201: u8), (130: u8), (18: u8), (66: u8), (56: u8), (198: u8), (149: u8), (207: u8), (189: u8), (175: u8), (120: u8), (123: u8), (224: u8), (177: u8), (167: u8), (251: u8), (159: u8), (143: u8), (110: u8), (68: u8), (183: u8), (189: u8), (70: u8), (126: u8), (32: u8), (35: u8), (164: u8), (44: u8), (30: u8), (44: u8), (12: u8), (65: u8), (18: u8), (62: u8), (239: u8), (242: u8), (2: u8), (248: u8), (104: u8), (2: u8), (178: u8), (64: u8), (28: u8), (126: u8), (36: u8), (137: u8), (24: u8), (14: u8), (116: u8), (91: u8), (98: u8), (90: u8), (159: u8), (218: u8), (102: u8), (45: u8), (11: u8), (110: u8), (223: u8), (245: u8), (184: u8), (52: u8), (99: u8), (59: u8), (245: u8), (136: u8), (175: u8), (3: u8), (72: u8), (164: u8), (146: u8), (145: u8), (116: u8), (22: u8), (66: u8), (24: u8), (49: u8), (193: u8), (121: u8), (3: u8), (60: u8), (37: u8), (41: u8), (97: u8), (3: u8), (190: u8), (66: u8), (195: u8), (225: u8), (63: u8), (46: u8), (3: u8), (118: u8), (4: u8), (208: u8), (15: u8), (1: u8), (40: u8), (254: u8), (235: u8), (151: u8), (123: u8), (70: u8), (180: u8), (170: u8), (44: u8), (172: u8), (90: u8), (4: u8), (254: u8), (53: u8), (239: u8), (116: u8), (246: u8), (67: u8), (56: u8), (129: u8), (61: u8), (22: u8), (169: u8), (213: u8), (65: u8), (27: u8), (216: u8), (116: u8), (162: u8), (239: u8), (214: u8), (207: u8), (126: u8), (177: u8), (20: u8), (100: u8), (25: u8), (48: u8), (143: u8), (84: u8), (215: u8), (70: u8), (197: u8), (53: u8), (65: u8), (70: u8), (86: u8), (172: u8), (61: u8), (62: u8), (9: u8), (212: u8), (167: u8), (169: u8), (133: u8), (41: u8), (126: u8), (213: u8), (196: u8), (33: u8), (192: u8), (238: u8), (0: u8), (63: u8), (246: u8), (215: u8), (58: u8), (128: u8), (110: u8), (101: u8), (92: u8), (3: u8), (170: u8), (214: u8), (130: u8), (149: u8), (52: u8), (81: u8), (125: u8), (118: u8), (233: u8), (3: u8), (118: u8), (193: u8), (104: u8), (207: u8), (120: u8), (115: u8), (77: u8), (253: u8), (191: u8), (122: u8), (0: u8), (107: u8), (164: u8), (207: u8), (113: u8), (81: u8), (169: u8), (36: u8), (201: u8), (228: u8), (74: u8), (134: u8), (131: u8), (218: u8), (178: u8), (35: u8), (30: u8), (216: u8), (101: u8), (2: u8), (103: u8), (174: u8), (87: u8), (95: u8), (50: u8), (50: u8), (215: u8), (157: u8), (5: u8), (210: u8), (188: u8), (54: u8), (211: u8), (78: u8), (45: u8), (199: u8), (96: u8), (121: u8), (241: u8), (241: u8), (176: u8), (226: u8), (194: u8), (134: u8), (130: u8), (89: u8), (217: u8), (210: u8), (186: u8), (32: u8), (140: u8), (39: u8), (91: u8), (103: u8), (212: u8), (26: u8), (87: u8), (32: u8), (72: u8), (144: u8), (228: u8), (230: u8), (117: u8), (99: u8), (188: u8), (50: u8), (15: u8), (69: u8), (79: u8), (179: u8), (50: u8), (12: u8), (106: u8), (86: u8), (218: u8), (101: u8), (73: u8), (142: u8), (243: u8), (29: u8), (250: u8), (122: u8), (228: u8), (233: u8), (29: u8), (255: u8), (22: u8), (121: u8), (114: u8), (125: u8), (103: u8), (41: u8), (250: u8), (241: u8), (179: u8), (126: u8), (158: u8), (198: u8), (116: u8), (209: u8), (65: u8), (94: u8), (98: u8), (228: u8), (175: u8), (169: u8), (96: u8), (3: u8), (9: u8), (233: u8), (133: u8), (214: u8), (55: u8), (161: u8), (164: u8), (103: u8), (80: u8), (85: u8), (24: u8), (186: u8), (64: u8), (167: u8), (92: u8), (131: u8), (53: u8), (101: u8), (202: u8), (47: u8), (25: u8), (104: u8), (118: u8), (155: u8), (14: u8), (12: u8), (12: u8), (25: u8), (116: u8), (45: u8), (221: u8), (249: u8), (28: u8), (246: u8), (212: u8), (200: u8), (157: u8), (167: u8), (169: u8), (56: u8), (197: u8), (181: u8), (4: u8), (245: u8), (146: u8), (1: u8), (140: u8), (234: u8), (191: u8), (212: u8), (228: u8), (125: u8), (87: u8), (81: u8), (86: u8), (119: u8), (30: u8), (63: u8), (129: u8), (143: u8), (32: u8), (96: u8));
-  let mut input_511 = (#_mkRepeatedArray returning Array<u8, 511: u32>)((0: u8));
-  let mut input_512 = (#_mkRepeatedArray returning Array<u8, 512: u32>)((0: u8));
-  let mut input_575 = (#_mkRepeatedArray returning Array<u8, 575: u32>)((0: u8));
-  let mut input_576 = (#_mkRepeatedArray returning Array<u8, 576: u32>)((0: u8));
+  let input_511 = (#_ref returning & Array<u8, 511: u32>)((#_mkRepeatedArray returning Array<u8, 511: u32>)((0: u8)));
+  let input_512 = (#_ref returning & Array<u8, 512: u32>)((#_mkRepeatedArray returning Array<u8, 512: u32>)((0: u8)));
+  let input_575 = (#_ref returning & Array<u8, 575: u32>)((#_mkRepeatedArray returning Array<u8, 575: u32>)((0: u8)));
+  let input_576 = (#_ref returning & Array<u8, 576: u32>)((#_mkRepeatedArray returning Array<u8, 576: u32>)((0: u8)));
   for i in (0: u32) .. (#_arrayLen returning u32)(input) do {
     (input_511[i]: u8) = (#_arrayIndex returning u8)(input, (#_cast returning u32)(i));
     (input_512[i]: u8) = (#_arrayIndex returning u8)(input, (#_cast returning u32)(i));
@@ -93,10 +95,10 @@ noir_def «sha256-0.0.0»::sha256::tests::same_msg_len_variable_padding<>() -> U
   };
   let fixed_length_hash = («sha256-0.0.0»::sha256::sha256<448: u32> as λ(Array<u8, 448: u32>) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input);
   let var_full_length_hash = («sha256-0.0.0»::sha256::sha256_var<448: u32> as λ(Array<u8, 448: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input, (#_arrayLen returning u32)(input));
-  let var_length_hash_511 = («sha256-0.0.0»::sha256::sha256_var<511: u32> as λ(Array<u8, 511: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input_511, (#_arrayLen returning u32)(input));
-  let var_length_hash_512 = («sha256-0.0.0»::sha256::sha256_var<512: u32> as λ(Array<u8, 512: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input_512, (#_arrayLen returning u32)(input));
-  let var_length_hash_575 = («sha256-0.0.0»::sha256::sha256_var<575: u32> as λ(Array<u8, 575: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input_575, (#_arrayLen returning u32)(input));
-  let var_length_hash_576 = («sha256-0.0.0»::sha256::sha256_var<576: u32> as λ(Array<u8, 576: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(input_576, (#_arrayLen returning u32)(input));
+  let var_length_hash_511 = («sha256-0.0.0»::sha256::sha256_var<511: u32> as λ(Array<u8, 511: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 511: u32>)(input_511), (#_arrayLen returning u32)(input));
+  let var_length_hash_512 = («sha256-0.0.0»::sha256::sha256_var<512: u32> as λ(Array<u8, 512: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 512: u32>)(input_512), (#_arrayLen returning u32)(input));
+  let var_length_hash_575 = («sha256-0.0.0»::sha256::sha256_var<575: u32> as λ(Array<u8, 575: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 575: u32>)(input_575), (#_arrayLen returning u32)(input));
+  let var_length_hash_576 = («sha256-0.0.0»::sha256::sha256_var<576: u32> as λ(Array<u8, 576: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 576: u32>)(input_576), (#_arrayLen returning u32)(input));
   (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(var_full_length_hash, fixed_length_hash));
   (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(var_length_hash_511, fixed_length_hash));
   (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(var_length_hash_512, fixed_length_hash));
@@ -106,11 +108,11 @@ noir_def «sha256-0.0.0»::sha256::tests::same_msg_len_variable_padding<>() -> U
 }
 
 noir_def «sha256-0.0.0»::sha256::tests::make_item<>(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 := {
-  let mut item = (#_cast returning u32)(b0);
-  item = (#_uAdd returning u32)((#_uShl returning u32)(item, (8: u32)), (#_cast returning u32)(b1));
-  item = (#_uAdd returning u32)((#_uShl returning u32)(item, (8: u32)), (#_cast returning u32)(b2));
-  item = (#_uAdd returning u32)((#_uShl returning u32)(item, (8: u32)), (#_cast returning u32)(b3));
-  item
+  let item = (#_ref returning & u32)((#_cast returning u32)(b0));
+  item = (#_uAdd returning u32)((#_uShl returning u32)((#_readRef returning u32)(item), (8: u32)), (#_cast returning u32)(b1));
+  item = (#_uAdd returning u32)((#_uShl returning u32)((#_readRef returning u32)(item), (8: u32)), (#_cast returning u32)(b2));
+  item = (#_uAdd returning u32)((#_uShl returning u32)((#_readRef returning u32)(item), (8: u32)), (#_cast returning u32)(b3));
+  (#_readRef returning u32)(item)
 }
 
 noir_def «sha256-0.0.0»::sha256::tests::test_build_msg_block_start_0<>() -> Unit := {
@@ -145,60 +147,236 @@ noir_def «sha256-0.0.0»::sha256::tests::test_attach_len_to_msg_block<>() -> Un
   #_skip
 }
 
+noir_def «sha256-0.0.0»::sha256::tests::regression_test_partial_hash_non_block_aligned<>() -> Unit := {
+  let data = (#_ref returning & Array<u8, 100: u32>)((#_mkRepeatedArray returning Array<u8, 100: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 100: u32>)(data)) do {
+    (data[i]: u8) = (#_cast returning u8)((#_uRem returning u32)((#_uAdd returning u32)((#_uMul returning u32)(i, (7: u32)), (1: u32)), (256: u32)));
+    #_skip
+  };
+  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<100: u32> as λ(Array<u32, 8: u32>, Array<u8, 100: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 100: u32>)(data), (64: u32), (#_arrayLen returning u32)((#_readRef returning Array<u8, 100: u32>)(data)));
+  let correct_hash = («sha256-0.0.0»::sha256::sha256_var<100: u32> as λ(Array<u8, 100: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 100: u32>)(data), (#_arrayLen returning u32)((#_readRef returning Array<u8, 100: u32>)(data)));
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(hash, correct_hash));
+  #_skip
+}
+
 noir_def «sha256-0.0.0»::sha256::tests::fuzz_test_partial_hash<>(data: Array<u8, 192: u32>) -> Unit := {
-  let mut data0 = (#_mkRepeatedArray returning Array<u8, 128: u32>)((0: u8));
-  for i in (0: u32) .. (#_arrayLen returning u32)(data0) do {
+  let data0 = (#_ref returning & Array<u8, 128: u32>)((#_mkRepeatedArray returning Array<u8, 128: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 128: u32>)(data0)) do {
     (data0[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)(i));
     #_skip
   };
-  let mut data1 = (#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8));
-  for i in (0: u32) .. (#_arrayLen returning u32)(data1) do {
-    (data1[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)((#_uAdd returning u32)((#_arrayLen returning u32)(data0), i)));
+  let data1 = (#_ref returning & Array<u8, 64: u32>)((#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 64: u32>)(data1)) do {
+    (data1[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)((#_uAdd returning u32)((#_arrayLen returning u32)((#_readRef returning Array<u8, 128: u32>)(data0)), i)));
     #_skip
   };
-  let state = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<128: u32> as λ(Array<u32, 8: u32>, Array<u8, 128: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), data0, (128: u32));
-  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)(state, data1, (#_arrayLen returning u32)(data1), (#_arrayLen returning u32)(data));
+  let state = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<128: u32> as λ(Array<u32, 8: u32>, Array<u8, 128: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 128: u32>)(data0), (128: u32));
+  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)(state, (#_readRef returning Array<u8, 64: u32>)(data1), (#_arrayLen returning u32)((#_readRef returning Array<u8, 64: u32>)(data1)), (#_arrayLen returning u32)(data));
   let correct_hash = («sha256-0.0.0»::sha256::sha256_var<192: u32> as λ(Array<u8, 192: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(data, (#_arrayLen returning u32)(data));
   (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(hash, correct_hash));
   #_skip
 }
 
 noir_def «sha256-0.0.0»::sha256::tests::fuzz_test_partial_hash_interstitial<>(data: Array<u8, 192: u32>) -> Unit := {
-  let mut data0 = (#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8));
-  let mut data1 = (#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8));
-  let mut data2 = (#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8));
-  for i in (0: u32) .. (#_arrayLen returning u32)(data0) do {
+  let data0 = (#_ref returning & Array<u8, 64: u32>)((#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8)));
+  let data1 = (#_ref returning & Array<u8, 64: u32>)((#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8)));
+  let data2 = (#_ref returning & Array<u8, 64: u32>)((#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 64: u32>)(data0)) do {
     (data0[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)(i));
     (data1[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)((#_uAdd returning u32)((64: u32), i)));
     (data2[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)((#_uAdd returning u32)((128: u32), i)));
     #_skip
   };
-  let pre_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), data0, (64: u32));
-  let interstitial_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)(pre_hash, data1, (64: u32));
-  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)(interstitial_hash, data2, (#_arrayLen returning u32)(data2), (#_arrayLen returning u32)(data));
+  let pre_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 64: u32>)(data0), (64: u32));
+  let interstitial_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)(pre_hash, (#_readRef returning Array<u8, 64: u32>)(data1), (64: u32));
+  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)(interstitial_hash, (#_readRef returning Array<u8, 64: u32>)(data2), (#_arrayLen returning u32)((#_readRef returning Array<u8, 64: u32>)(data2)), (#_arrayLen returning u32)(data));
   let correct_hash = («sha256-0.0.0»::sha256::sha256_var<192: u32> as λ(Array<u8, 192: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(data, (#_arrayLen returning u32)(data));
   (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(hash, correct_hash));
   #_skip
 }
 
 noir_def «sha256-0.0.0»::sha256::tests::fuzz_test_partial_hash_end<>(data: Array<u8, 192: u32>) -> Unit := {
-  let mut data0 = (#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8));
-  let mut data1 = (#_mkRepeatedArray returning Array<u8, 128: u32>)((0: u8));
-  let mut data2 = (#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8));
-  for i in (0: u32) .. (#_arrayLen returning u32)(data0) do {
+  let data0 = (#_ref returning & Array<u8, 64: u32>)((#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8)));
+  let data1 = (#_ref returning & Array<u8, 128: u32>)((#_mkRepeatedArray returning Array<u8, 128: u32>)((0: u8)));
+  let data2 = (#_ref returning & Array<u8, 64: u32>)((#_mkRepeatedArray returning Array<u8, 64: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 64: u32>)(data0)) do {
     (data0[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)(i));
     (data1[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)((#_uAdd returning u32)((64: u32), i)));
     (data2[i]: u8) = (#_arrayIndex returning u8)(data, (#_cast returning u32)((#_uAdd returning u32)((128: u32), i)));
     #_skip
   };
-  let pre_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), data0, (64: u32));
-  let interstitial_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<128: u32> as λ(Array<u32, 8: u32>, Array<u8, 128: u32>, u32) -> Array<u32, 8: u32>)(pre_hash, data1, (64: u32));
-  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)(interstitial_hash, data2, (#_arrayLen returning u32)(data2), (#_arrayLen returning u32)(data));
+  let pre_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 64: u32>)(data0), (64: u32));
+  let interstitial_hash = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<128: u32> as λ(Array<u32, 8: u32>, Array<u8, 128: u32>, u32) -> Array<u32, 8: u32>)(pre_hash, (#_readRef returning Array<u8, 128: u32>)(data1), (64: u32));
+  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)(interstitial_hash, (#_readRef returning Array<u8, 64: u32>)(data2), (#_arrayLen returning u32)((#_readRef returning Array<u8, 64: u32>)(data2)), (#_arrayLen returning u32)(data));
   let correct_hash = («sha256-0.0.0»::sha256::sha256_var<192: u32> as λ(Array<u8, 192: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(data, (#_arrayLen returning u32)(data));
   (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(hash, correct_hash));
   #_skip
 }
 
+noir_def «sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_end<N: u32>(h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32, real_message_size: u32) -> Array<u8, 32: u32> := {
+  (#_fresh returning Array<u8, 32: u32>)()
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_interstitial<N: u32>(h: Array<u32, 8: u32>, msg: Array<u8, N: u32>, message_size: u32) -> Array<u32, 8: u32> := {
+  (#_fresh returning Array<u32, 8: u32>)()
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<>(real_message_size: u32) -> Unit := {
+  let msg = (#_ref returning & Array<u8, 192: u32>)((#_mkRepeatedArray returning Array<u8, 192: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 192: u32>)(msg)) do {
+    (msg[i]: u8) = (#_cast returning u8)((#_uRem returning u32)((#_uAdd returning u32)((#_uMul returning u32)(i, (7: u32)), (1: u32)), (256: u32)));
+    #_skip
+  };
+  let message_size = (#_uMul returning u32)((#_uDiv returning u32)(real_message_size, (64: u32)), (64: u32));
+  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<192: u32> as λ(Array<u32, 8: u32>, Array<u8, 192: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 192: u32>)(msg), message_size, real_message_size);
+  let reference = («sha256-0.0.0»::sha256::sha256_var<192: u32> as λ(Array<u8, 192: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 192: u32>)(msg), real_message_size);
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(hash, reference));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_1<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((1: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_33<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((33: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_63<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((63: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_65<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((65: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_100<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((100: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_127<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((127: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_129<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((129: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_191<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((191: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_64<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((64: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_partial_end_size_128<>() -> Unit := {
+  («sha256-0.0.0»::sha256::tests::assert_partial_end_matches_reference<> as λ(u32) -> Unit)((128: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::fuzz_partial_end_implementations_agree<>(msg: Array<u8, 192: u32>, real_message_size: u32) -> Unit := {
+  let real = (#_uRem returning u32)(real_message_size, (193: u32));
+  let message_size = (#_uMul returning u32)((#_uDiv returning u32)(real, (64: u32)), (64: u32));
+  let oracle = {
+    («sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_end<192: u32> as λ(Array<u32, 8: u32>, Array<u8, 192: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, message_size, real)
+  };
+  let circuit = («sha256-0.0.0»::sha256::partial_sha256_var_end<192: u32> as λ(Array<u32, 8: u32>, Array<u8, 192: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, message_size, real);
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(circuit, oracle));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::fuzz_partial_end_matches_reference<>(msg: Array<u8, 192: u32>, real_message_size: u32) -> Unit := {
+  let real = (#_uRem returning u32)(real_message_size, (193: u32));
+  let message_size = (#_uMul returning u32)((#_uDiv returning u32)(real, (64: u32)), (64: u32));
+  let hash = («sha256-0.0.0»::sha256::partial_sha256_var_end<192: u32> as λ(Array<u32, 8: u32>, Array<u8, 192: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, message_size, real);
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(hash, («sha256-0.0.0»::sha256::sha256_var<192: u32> as λ(Array<u8, 192: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)(msg, real)));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::regression_partial_end_tail_beyond_capacity<>() -> Unit := {
+  let msg = (#_mkRepeatedArray returning Array<u8, 64: u32>)((7: u8));
+  let __0 = («sha256-0.0.0»::sha256::partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, (64: u32), (100: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::regression_partial_end_tail_beyond_capacity_unconstrained<>() -> Unit := {
+  let msg = (#_mkRepeatedArray returning Array<u8, 64: u32>)((7: u8));
+  let __0 = {
+    («sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_end<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32, u32) -> Array<u8, 32: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, (64: u32), (100: u32))
+  };
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::regression_partial_interstitial_message_beyond_capacity<>() -> Unit := {
+  let msg = (#_mkRepeatedArray returning Array<u8, 64: u32>)((7: u8));
+  let __0 = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<64: u32> as λ(Array<u32, 8: u32>, Array<u8, 64: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, (128: u32));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_composed_non_aligned_tail_only<>() -> Unit := {
+  let full = (#_ref returning & Array<u8, 100: u32>)((#_mkRepeatedArray returning Array<u8, 100: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 100: u32>)(full)) do {
+    (full[i]: u8) = (#_cast returning u8)((#_uRem returning u32)((#_uAdd returning u32)((#_uMul returning u32)(i, (7: u32)), (1: u32)), (256: u32)));
+    #_skip
+  };
+  let state = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<100: u32> as λ(Array<u32, 8: u32>, Array<u8, 100: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 100: u32>)(full), (64: u32));
+  let tail = (#_ref returning & Array<u8, 36: u32>)((#_mkRepeatedArray returning Array<u8, 36: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 36: u32>)(tail)) do {
+    (tail[i]: u8) = (#_arrayIndex returning u8)((#_readRef returning Array<u8, 100: u32>)(full), (#_cast returning u32)((#_uAdd returning u32)((64: u32), i)));
+    #_skip
+  };
+  let circuit = («sha256-0.0.0»::sha256::partial_sha256_var_end<36: u32> as λ(Array<u32, 8: u32>, Array<u8, 36: u32>, u32, u32) -> Array<u8, 32: u32>)(state, (#_readRef returning Array<u8, 36: u32>)(tail), (0: u32), (100: u32));
+  let oracle = {
+    («sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_end<36: u32> as λ(Array<u32, 8: u32>, Array<u8, 36: u32>, u32, u32) -> Array<u8, 32: u32>)(state, (#_readRef returning Array<u8, 36: u32>)(tail), (0: u32), (100: u32))
+  };
+  let reference = («sha256-0.0.0»::sha256::sha256_var<100: u32> as λ(Array<u8, 100: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 100: u32>)(full), (100: u32));
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(circuit, reference));
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(oracle, reference));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::test_composed_non_aligned_block_plus_tail<>() -> Unit := {
+  let full = (#_ref returning & Array<u8, 200: u32>)((#_mkRepeatedArray returning Array<u8, 200: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 200: u32>)(full)) do {
+    (full[i]: u8) = (#_cast returning u8)((#_uRem returning u32)((#_uAdd returning u32)((#_uMul returning u32)(i, (7: u32)), (1: u32)), (256: u32)));
+    #_skip
+  };
+  let state = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<200: u32> as λ(Array<u32, 8: u32>, Array<u8, 200: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), (#_readRef returning Array<u8, 200: u32>)(full), (128: u32));
+  let chunk = (#_ref returning & Array<u8, 72: u32>)((#_mkRepeatedArray returning Array<u8, 72: u32>)((0: u8)));
+  for i in (0: u32) .. (#_arrayLen returning u32)((#_readRef returning Array<u8, 72: u32>)(chunk)) do {
+    (chunk[i]: u8) = (#_arrayIndex returning u8)((#_readRef returning Array<u8, 200: u32>)(full), (#_cast returning u32)((#_uAdd returning u32)((128: u32), i)));
+    #_skip
+  };
+  let circuit = («sha256-0.0.0»::sha256::partial_sha256_var_end<72: u32> as λ(Array<u32, 8: u32>, Array<u8, 72: u32>, u32, u32) -> Array<u8, 32: u32>)(state, (#_readRef returning Array<u8, 72: u32>)(chunk), (64: u32), (200: u32));
+  let oracle = {
+    («sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_end<72: u32> as λ(Array<u32, 8: u32>, Array<u8, 72: u32>, u32, u32) -> Array<u8, 32: u32>)(state, (#_readRef returning Array<u8, 72: u32>)(chunk), (64: u32), (200: u32))
+  };
+  let reference = («sha256-0.0.0»::sha256::sha256_var<200: u32> as λ(Array<u8, 200: u32>, u32) -> @«sha256-0.0.0»::sha256::constants::HASH<>)((#_readRef returning Array<u8, 200: u32>)(full), (200: u32));
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(circuit, reference));
+  (#_assert returning Unit)(((Array<u8, 32: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u8, 32: u32>, Array<u8, 32: u32>) -> bool)(oracle, reference));
+  #_skip
+}
+
+noir_def «sha256-0.0.0»::sha256::tests::fuzz_partial_interstitial_implementations_agree<>(msg: Array<u8, 192: u32>, num_blocks: u32) -> Unit := {
+  let message_size = (#_uMul returning u32)((#_uRem returning u32)(num_blocks, (4: u32)), (64: u32));
+  let oracle = {
+    («sha256-0.0.0»::sha256::tests::unconstrained_partial_sha256_var_interstitial<192: u32> as λ(Array<u32, 8: u32>, Array<u8, 192: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, message_size)
+  };
+  let circuit = («sha256-0.0.0»::sha256::partial_sha256_var_interstitial<192: u32> as λ(Array<u32, 8: u32>, Array<u8, 192: u32>, u32) -> Array<u32, 8: u32>)((«sha256-0.0.0»::sha256::constants::INITIAL_STATE<> as λ() -> @«sha256-0.0.0»::sha256::constants::STATE<>)(), msg, message_size);
+  (#_assert returning Unit)(((Array<u32, 8: u32> as «std-1.0.0-beta.14»::cmp::Eq<>)::eq<> as λ(Array<u32, 8: u32>, Array<u32, 8: u32>) -> bool)(circuit, oracle));
+  #_skip
+}
+
 def «sha256-0.0.0».Sha256.Tests.env : Env := Env.mk
-  [«sha256-0.0.0::sha256::tests::test_sha256_1», «sha256-0.0.0::sha256::tests::test_sha256_200», «sha256-0.0.0::sha256::tests::test_sha256_511», «sha256-0.0.0::sha256::tests::test_sha256_512», «sha256-0.0.0::sha256::tests::empty_sha256», «sha256-0.0.0::sha256::tests::smoke_test», «sha256-0.0.0::sha256::tests::msg_just_over_block», «sha256-0.0.0::sha256::tests::msg_multiple_over_block», «sha256-0.0.0::sha256::tests::msg_just_under_block», «sha256-0.0.0::sha256::tests::msg_big_not_block_multiple», «sha256-0.0.0::sha256::tests::msg_big_with_padding», «sha256-0.0.0::sha256::tests::msg_big_no_padding», «sha256-0.0.0::sha256::tests::same_msg_len_variable_padding», «sha256-0.0.0::sha256::tests::make_item», «sha256-0.0.0::sha256::tests::test_build_msg_block_start_0», «sha256-0.0.0::sha256::tests::test_build_msg_block_start_1», «sha256-0.0.0::sha256::tests::test_attach_len_to_msg_block», «sha256-0.0.0::sha256::tests::fuzz_test_partial_hash», «sha256-0.0.0::sha256::tests::fuzz_test_partial_hash_interstitial», «sha256-0.0.0::sha256::tests::fuzz_test_partial_hash_end»]
+  [«sha256-0.0.0::sha256::tests::test_sha256_1», «sha256-0.0.0::sha256::tests::test_sha256_200», «sha256-0.0.0::sha256::tests::test_sha256_511», «sha256-0.0.0::sha256::tests::test_sha256_512», «sha256-0.0.0::sha256::tests::empty_sha256», «sha256-0.0.0::sha256::tests::smoke_test», «sha256-0.0.0::sha256::tests::msg_just_over_block», «sha256-0.0.0::sha256::tests::msg_multiple_over_block», «sha256-0.0.0::sha256::tests::msg_just_under_block», «sha256-0.0.0::sha256::tests::msg_big_not_block_multiple», «sha256-0.0.0::sha256::tests::msg_big_with_padding», «sha256-0.0.0::sha256::tests::msg_big_no_padding», «sha256-0.0.0::sha256::tests::same_msg_len_variable_padding», «sha256-0.0.0::sha256::tests::make_item», «sha256-0.0.0::sha256::tests::test_build_msg_block_start_0», «sha256-0.0.0::sha256::tests::test_build_msg_block_start_1», «sha256-0.0.0::sha256::tests::test_attach_len_to_msg_block», «sha256-0.0.0::sha256::tests::regression_test_partial_hash_non_block_aligned», «sha256-0.0.0::sha256::tests::fuzz_test_partial_hash», «sha256-0.0.0::sha256::tests::fuzz_test_partial_hash_interstitial», «sha256-0.0.0::sha256::tests::fuzz_test_partial_hash_end», «sha256-0.0.0::sha256::tests::unconstrained_partial_sha256_var_end», «sha256-0.0.0::sha256::tests::unconstrained_partial_sha256_var_interstitial», «sha256-0.0.0::sha256::tests::assert_partial_end_matches_reference», «sha256-0.0.0::sha256::tests::test_partial_end_size_1», «sha256-0.0.0::sha256::tests::test_partial_end_size_33», «sha256-0.0.0::sha256::tests::test_partial_end_size_63», «sha256-0.0.0::sha256::tests::test_partial_end_size_65», «sha256-0.0.0::sha256::tests::test_partial_end_size_100», «sha256-0.0.0::sha256::tests::test_partial_end_size_127», «sha256-0.0.0::sha256::tests::test_partial_end_size_129», «sha256-0.0.0::sha256::tests::test_partial_end_size_191», «sha256-0.0.0::sha256::tests::test_partial_end_size_64», «sha256-0.0.0::sha256::tests::test_partial_end_size_128», «sha256-0.0.0::sha256::tests::fuzz_partial_end_implementations_agree», «sha256-0.0.0::sha256::tests::fuzz_partial_end_matches_reference», «sha256-0.0.0::sha256::tests::regression_partial_end_tail_beyond_capacity», «sha256-0.0.0::sha256::tests::regression_partial_end_tail_beyond_capacity_unconstrained», «sha256-0.0.0::sha256::tests::regression_partial_interstitial_message_beyond_capacity», «sha256-0.0.0::sha256::tests::test_composed_non_aligned_tail_only», «sha256-0.0.0::sha256::tests::test_composed_non_aligned_block_plus_tail», «sha256-0.0.0::sha256::tests::fuzz_partial_interstitial_implementations_agree»]
   []

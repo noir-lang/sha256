@@ -5,6 +5,8 @@ import Lampe
 
 open Lampe
 
+set_option linter.unusedVariables false
+
 noir_global_def «sha256-0.0.0»::sha256::constants::BLOCK_SIZE: u32 = (64: u32);
 
 noir_global_def «sha256-0.0.0»::sha256::constants::MSG_SIZE_PTR: u32 = (56: u32);
