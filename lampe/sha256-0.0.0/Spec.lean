@@ -333,6 +333,8 @@ theorem finalize_sha256_blocks_spec {p : Prime}
   · -- Props goal: r = finalizeSha256BlocksRef ... with r = stateToHashRef X in context.
     simp_all [finalizeSha256BlocksRef, finalizeSha256BlocksWith, addPaddingAndCompressRef,
               BLOCK_SIZE, BitVec.toNat_umod]
+    -- The tuple projections `Builtin.indexTpl (h, block, ()) Member.head[.tail]` reduce definitionally.
+    rfl
   · exact h_comp  -- Sha256CompressionSpec for hash_final_block_spec
   · -- h_bnd: msg_byte_ptr.toNat < BLOCK_SIZE, where msg_byte_ptr = message_size.uRem 64.
     simp_all [BLOCK_SIZE, BitVec.toNat_umod]
@@ -351,7 +353,7 @@ theorem INITIAL_STATE_const_spec {p : Prime} :
       (fun r => r = initialState) := by
   enter_decl
   steps
-  simp_all [initialState, HList.toVec, HList.toList_cons]
+  simp_all [initialState, HList.toVec]
   norm_cast
 
 /-- `sha256_var` is correct: given a byte array `msg` of capacity `N` and a
@@ -384,6 +386,8 @@ theorem sha256_var_correct {p : Prime} {N : U 32}
     -- simp_all rewrites using the postcondition equalities accumulated in context,
     -- then unfolds sha256VarSpec / sha256Ref / sha256With to conclude.
     simp_all [sha256VarSpec, sha256Ref, sha256With, finalizeSha256BlocksRef, processFullBlocksRef]
+    -- The tuple projections `Builtin.indexTpl (h, block, ()) Member.head[.tail]` reduce definitionally.
+    rfl
   · exact h_comp  -- Sha256CompressionSpec for finalize_sha256_blocks_spec
   · exact h_comp  -- Sha256CompressionSpec for process_full_blocks_spec
 
