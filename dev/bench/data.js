@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785318302867,
+  "lastUpdate": 1785318305908,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -1655,6 +1655,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/e20d7275a2533b209a04503cbe62c14b4d995121"
         },
         "date": 1773424512674,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 623,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 827,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1138,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1139,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "asterite@gmail.com",
+            "name": "Ary Borenszweig",
+            "username": "asterite"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b1de80b0260e87ef28363a473f81ca4ecc0448fa",
+          "message": "chore: allow manually dispatching the benchmarks workflow (#63)\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+          "timestamp": "2026-07-29T10:44:17+01:00",
+          "tree_id": "d025ef316dc6b5ed6cd5f2ebefa99eee4fb95da8",
+          "url": "https://github.com/noir-lang/sha256/commit/b1de80b0260e87ef28363a473f81ca4ecc0448fa"
+        },
+        "date": 1785318305891,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
