@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785328367687,
+  "lastUpdate": 1785328369044,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -1169,6 +1169,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/b1de80b0260e87ef28363a473f81ca4ecc0448fa"
         },
         "date": 1785318302853,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 36000,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 36000,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 43309,
+            "unit": "circuit_size"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 47301,
+            "unit": "circuit_size"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "asterite@gmail.com",
+            "name": "Ary Borenszweig",
+            "username": "asterite"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a82d3ea6919580ece8311e58ef689d742b10a27f",
+          "message": "fix: partial_sha256_var_end constrained/unconstrained divergence on non-block-aligned messages (#62)\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+          "timestamp": "2026-07-29T09:32:13-03:00",
+          "tree_id": "b785eb9c4aa991fa765340bc92b771c628d9255b",
+          "url": "https://github.com/noir-lang/sha256/commit/a82d3ea6919580ece8311e58ef689d742b10a27f"
+        },
+        "date": 1785328369025,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
