@@ -266,11 +266,7 @@ fn add_padding_byte_and_compress_if_needed(
     }
 }
 
-pub(crate) fn finalize_sha256_blocks(
-    message_size: u32,
-    mut h: STATE,
-    mut msg_block: MSG_BLOCK,
-) -> HASH {
+pub(crate) fn finalize_sha256_blocks(message_size: u32, h: STATE, msg_block: MSG_BLOCK) -> HASH {
     let msg_byte_ptr = message_size % BLOCK_SIZE;
 
     let (h, mut msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
@@ -291,11 +287,12 @@ pub(crate) fn finalize_sha256_blocks(
  * @return the intermediate hash state after compressing in msg to h
  */
 pub fn partial_sha256_var_interstitial<let N: u32>(
-    mut h: [u32; 8],
+    h: [u32; 8],
     msg: [u8; N],
     message_size: u32,
 ) -> [u32; 8] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
+    assert(message_size <= N, "Message does not fit in the input array");
     if std::runtime::is_unconstrained() {
         // Safety: running as an unconstrained function
         unsafe {
@@ -326,6 +323,15 @@ pub fn partial_sha256_var_end<let N: u32>(
     real_message_size: u32,
 ) -> [u8; 32] {
     assert(message_size % BLOCK_SIZE == 0, "Message size must be a multiple of the block size");
+    assert(
+        real_message_size >= message_size,
+        "Real message size must be at least the message size",
+    );
+    // The block-aligned prefix plus the trailing partial block must lie within `msg`.
+    assert(
+        message_size + real_message_size % BLOCK_SIZE <= N,
+        "Message does not fit in the input array",
+    );
     if std::runtime::is_unconstrained() {
         // Safety: running as an unconstrained function
         unsafe {
@@ -335,10 +341,12 @@ pub fn partial_sha256_var_end<let N: u32>(
             // This case is only hit if the msg is less than the block size,
             // or our message cannot be evenly split into blocks.
 
-            finalize_last_sha256_block(h, real_message_size, msg)
+            finalize_last_sha256_block(h, message_size, real_message_size, msg)
         }
     } else {
-        let (h, msg_block) = process_full_blocks(msg, message_size, h);
+        // The final chunk is the block-aligned `message_size` plus the trailing partial block.
+        let chunk_size = message_size + (real_message_size % BLOCK_SIZE);
+        let (h, msg_block) = process_full_blocks(msg, chunk_size, h);
         finalize_sha256_blocks(real_message_size, h, msg_block)
     }
 }
@@ -358,19 +366,26 @@ unconstrained fn __sha_partial_var_interstitial<let N: u32>(
     h
 }
 
-// Helper function to finalize the message block with padding and length
+// Helper function to finalize the message block with padding and length.
+//
+// The trailing partial block is read from `msg` starting at `partial_message_size` (the
+// block-aligned bytes already compressed into `h`), while `real_message_size` supplies the
+// length encoded into the padding.
 unconstrained fn finalize_last_sha256_block<let N: u32>(
-    mut h: STATE,
-    message_size: u32,
+    h: STATE,
+    partial_message_size: u32,
+    real_message_size: u32,
     msg: [u8; N],
 ) -> HASH {
-    let msg_byte_ptr = message_size % BLOCK_SIZE;
+    let msg_byte_ptr = real_message_size % BLOCK_SIZE;
 
-    // We now build the final un-filled block.
+    // We now build the final un-filled block from the trailing bytes.
     let msg_block: MSG_BLOCK = if msg_byte_ptr != 0 {
-        let num_full_blocks = message_size / BLOCK_SIZE;
-        let msg_start = BLOCK_SIZE * num_full_blocks;
-        build_msg_block(msg, message_size, msg_start)
+        build_msg_block(
+            msg,
+            partial_message_size + msg_byte_ptr,
+            partial_message_size,
+        )
     } else {
         // If the message size is a multiple of the block size (i.e. `msg_byte_ptr == 0`) then this block will be empty,
         // so we short-circuit in this case.
@@ -379,7 +394,7 @@ unconstrained fn finalize_last_sha256_block<let N: u32>(
 
     // Once built, we need to add the necessary padding bytes and encoded length
     let (h, mut msg_block) = add_padding_byte_and_compress_if_needed(msg_block, msg_byte_ptr, h);
-    msg_block = attach_len_to_msg_block(msg_block, message_size);
+    msg_block = attach_len_to_msg_block(msg_block, real_message_size);
 
     hash_final_block(msg_block, h)
 }
