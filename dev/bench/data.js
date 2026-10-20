@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785328371919,
+  "lastUpdate": 1792506189297,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -595,6 +595,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/noir-lang/sha256/commit/a82d3ea6919580ece8311e58ef689d742b10a27f"
         },
         "date": 1785328366805,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1.json/main",
+            "value": 500,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_200.json/main",
+            "value": 1662,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_511.json/main",
+            "value": 3185,
+            "unit": "acir_opcodes"
+          },
+          {
+            "name": "test_sha256_512.json/main",
+            "value": 3181,
+            "unit": "acir_opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49558828+AztecBot@users.noreply.github.com",
+            "name": "Aztec Bot",
+            "username": "AztecBot"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "50f5fda729d94848aabcd9d54dc7751460e9143a",
+          "message": "chore: add experimental software warning to README (#65)",
+          "timestamp": "2026-10-20T15:22:39+01:00",
+          "tree_id": "11f6d7e985ffbf8d6679c6f4bf66ed93fb479fdb",
+          "url": "https://github.com/noir-lang/sha256/commit/50f5fda729d94848aabcd9d54dc7751460e9143a"
+        },
+        "date": 1792506188300,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
