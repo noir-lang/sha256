@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/noir-lang/sha256/compare/v0.3.0...v0.3.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* Partial_sha256_var_end constrained/unconstrained divergence on non-block-aligned messages ([#62](https://github.com/noir-lang/sha256/issues/62)) ([a82d3ea](https://github.com/noir-lang/sha256/commit/a82d3ea6919580ece8311e58ef689d742b10a27f))
+
 ## [0.3.0](https://github.com/noir-lang/sha256/compare/v0.2.1...v0.3.0) (2025-12-09)
 
 
