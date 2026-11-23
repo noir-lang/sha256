@@ -114,10 +114,11 @@ pub(crate) fn process_full_blocks<let N: u32>(
     }
 }
 
-// Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
-// `window` holds the bytes of `msg` from `msg_start` on, so that the call does not pass all of `msg`.
-pub(crate) unconstrained fn build_msg_block_helper(
-    window: [u8; BLOCK_SIZE],
+// Take `BLOCK_SIZE` number of bytes of the message starting at `msg_start` and pack them into a `MSG_BLOCK`.
+// The bytes are read from `bytes`, which holds the byte at `msg_start` at index `offset`.
+pub(crate) unconstrained fn build_msg_block_helper<let M: u32>(
+    bytes: [u8; M],
+    offset: u32,
     message_size: u32,
     msg_start: u32,
 ) -> MSG_BLOCK {
@@ -143,7 +144,11 @@ pub(crate) unconstrained fn build_msg_block_helper(
         // Always construct the integer as 4 bytes, even if it means going beyond the input.
         for j in 0..INT_SIZE {
             let k = i * INT_SIZE + j;
-            let msg_byte = if k < block_input { window[k] } else { 0 };
+            let msg_byte = if k < block_input {
+                bytes[offset + k]
+            } else {
+                0
+            };
             msg_item = (msg_item << 8) + msg_byte as u32;
         }
         msg_block[i] = msg_item;
@@ -156,9 +161,9 @@ pub(crate) unconstrained fn build_msg_block_helper(
 
 // The `BLOCK_SIZE` bytes of `msg` from `msg_start` on, with zeros past the end of `msg`.
 //
-// Passing this to `build_msg_block_helper` in place of `msg` keeps the ACIR size linear in `N`:
-// each call to an unconstrained function lists all of its inputs, and there is one call per block.
-// In a circuit `msg_start` is known at compile time, so this costs no constraints.
+// A circuit passes this to `build_msg_block_helper` in place of `msg`, which keeps the ACIR size
+// linear in `N`: each call to an unconstrained function lists all of its inputs, and there is one
+// call per block. In a circuit `msg_start` is known at compile time, so this costs no constraints.
 fn msg_window<let N: u32>(msg: [u8; N], msg_start: u32) -> [u8; BLOCK_SIZE] {
     let mut window = [0; BLOCK_SIZE];
     for k in 0..BLOCK_SIZE {
@@ -176,7 +181,14 @@ fn msg_window<let N: u32>(msg: [u8; N], msg_start: u32) -> [u8; BLOCK_SIZE] {
 fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) -> MSG_BLOCK {
     let msg_block =
         // Safety: We constrain the block below by reconstructing each `u32` word from the input bytes.
-        unsafe { build_msg_block_helper(msg_window(msg, msg_start), message_size, msg_start) };
+        unsafe {
+            if is_unconstrained() {
+                // Unconstrained code passes `msg` itself: copying the window would cost execution.
+                build_msg_block_helper(msg, msg_start, message_size, msg_start)
+            } else {
+                build_msg_block_helper(msg_window(msg, msg_start), 0, message_size, msg_start)
+            }
+        };
 
     if !is_unconstrained() {
         let msg_end = msg_start + BLOCK_SIZE;
