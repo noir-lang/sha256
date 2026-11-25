@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795624523387,
+  "lastUpdate": 1795624527144,
   "repoUrl": "https://github.com/noir-lang/sha256",
   "entries": {
     "ACIR Opcodes": [
@@ -2071,6 +2071,50 @@ window.BENCHMARK_DATA = {
           {
             "name": "test_sha256_512",
             "value": 1139,
+            "unit": "opcodes"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49558828+AztecBot@users.noreply.github.com",
+            "name": "Aztec Bot",
+            "username": "AztecBot"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8789c3100b3ab26475215bd4d2b416dd1848f49f",
+          "message": "fix: make the bytecode of `sha256_var` linear in the message size (#67)\n\nCo-authored-by: benesjan <janbenes1234@gmail.com>\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T16:34:51Z",
+          "tree_id": "da6fa957a09b3b25d4ac8694b245dbd73f31f728",
+          "url": "https://github.com/noir-lang/sha256/commit/8789c3100b3ab26475215bd4d2b416dd1848f49f"
+        },
+        "date": 1795624527132,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "test_sha256_1",
+            "value": 617,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_200",
+            "value": 821,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_511",
+            "value": 1132,
+            "unit": "opcodes"
+          },
+          {
+            "name": "test_sha256_512",
+            "value": 1133,
             "unit": "opcodes"
           }
         ]
