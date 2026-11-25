@@ -114,9 +114,11 @@ pub(crate) fn process_full_blocks<let N: u32>(
     }
 }
 
-// Take `BLOCK_SIZE` number of bytes from `msg` starting at `msg_start` and pack them into a `MSG_BLOCK`.
-pub(crate) unconstrained fn build_msg_block_helper<let N: u32>(
-    msg: [u8; N],
+// Take `BLOCK_SIZE` number of bytes of the message starting at `msg_start` and pack them into a `MSG_BLOCK`.
+// The bytes are read from `bytes`, which holds the message byte at `msg_start` at index `bytes_start`.
+pub(crate) unconstrained fn build_msg_block_helper<let M: u32>(
+    bytes: [u8; M],
+    bytes_start: u32,
     message_size: u32,
     msg_start: u32,
 ) -> MSG_BLOCK {
@@ -143,7 +145,7 @@ pub(crate) unconstrained fn build_msg_block_helper<let N: u32>(
         for j in 0..INT_SIZE {
             let k = i * INT_SIZE + j;
             let msg_byte = if k < block_input {
-                msg[msg_start + k]
+                bytes[bytes_start + k]
             } else {
                 0
             };
@@ -152,9 +154,22 @@ pub(crate) unconstrained fn build_msg_block_helper<let N: u32>(
         msg_block[i] = msg_item;
     }
 
-    // Returning the index as if it was a 64 byte array.
-    // We have to project it down to 16 items and bit shifting to get a byte back if we need it.
     msg_block
+}
+
+// The `BLOCK_SIZE` bytes of `msg` from `msg_start` on, with zeros past the end of `msg`.
+//
+// A circuit passes this to `build_msg_block_helper` in place of `msg`, which keeps the ACIR size
+// linear in `N`: each call to an unconstrained function lists all of its inputs, and there is one
+// call per block. In a circuit `msg_start` is known at compile time, so this costs no constraints.
+fn msg_window<let N: u32>(msg: [u8; N], msg_start: u32) -> [u8; BLOCK_SIZE] {
+    let mut window = [0; BLOCK_SIZE];
+    for k in 0..BLOCK_SIZE {
+        if msg_start + k < N {
+            window[k] = msg[msg_start + k];
+        }
+    }
+    window
 }
 
 // Build a message block from the input message starting at `msg_start`.
@@ -162,34 +177,62 @@ pub(crate) unconstrained fn build_msg_block_helper<let N: u32>(
 // If `message_size` is less than `msg_start` then this is called with the old non-empty block;
 // in that case we can skip verification, ie. no need to check that everything is zero.
 fn build_msg_block<let N: u32>(msg: [u8; N], message_size: u32, msg_start: u32) -> MSG_BLOCK {
-    let msg_block =
-        // Safety: We constrain the block below by reconstructing each `u32` word from the input bytes.
-        unsafe { build_msg_block_helper(msg, message_size, msg_start) };
-
-    if !is_unconstrained() {
-        let msg_end = msg_start + BLOCK_SIZE;
-
-        let max_read_index = std::cmp::min(message_size, msg_end);
-
-        // Reconstructed packed item
-        let mut msg_item: Field = 0;
-
-        // Inclusive at the end so that we can compare the last item.
-        for k in msg_start..=msg_end {
-            if (k != msg_start) & (k % INT_SIZE == 0) {
-                // If we consumed some input we can compare against the block.
-                let msg_block_index = (k - msg_start) / INT_SIZE - 1;
-                assert_eq(msg_block[msg_block_index] as Field, msg_item);
-
-                msg_item = 0;
-            }
-
-            // If we have input to consume, add it at the rightmost position.
-            let msg_byte = if k < max_read_index { msg[k] } else { 0 };
-            msg_item = msg_item * (TWO_POW_8 as Field) + msg_byte as Field;
+    if is_unconstrained() {
+        // Safety: unconstrained code does not constrain the block.
+        // `msg` is passed whole: copying out a window would only cost execution.
+        unsafe {
+            build_msg_block_helper(msg, msg_start, message_size, msg_start)
         }
+    } else {
+        // `msg_window` reads `msg` at constant indices only if `msg_start` is known at compile time;
+        // a runtime `msg_start` would turn each of its reads into a dynamic array access.
+        std::static_assert(
+            msg_start % BLOCK_SIZE == 0,
+            "msg_start must be a compile-time multiple of BLOCK_SIZE",
+        );
+        // Safety: We constrain the block below by reconstructing each `u32` word from the input bytes.
+        let msg_block = unsafe {
+            if N <= BLOCK_SIZE {
+                // `msg` is no larger than a window, so pass it as is.
+                build_msg_block_helper(msg, msg_start, message_size, msg_start)
+            } else {
+                build_msg_block_helper(msg_window(msg, msg_start), 0, message_size, msg_start)
+            }
+        };
+        verify_msg_block(msg, message_size, msg_start, msg_block);
+        msg_block
     }
-    msg_block
+}
+
+// Constrain `msg_block` to hold the bytes of `msg` from `msg_start` on, with every byte at or past
+// `message_size` taken as zero.
+fn verify_msg_block<let N: u32>(
+    msg: [u8; N],
+    message_size: u32,
+    msg_start: u32,
+    msg_block: MSG_BLOCK,
+) {
+    let msg_end = msg_start + BLOCK_SIZE;
+
+    let max_read_index = std::cmp::min(message_size, msg_end);
+
+    // Reconstructed packed item
+    let mut msg_item: Field = 0;
+
+    // Inclusive at the end so that we can compare the last item.
+    for k in msg_start..=msg_end {
+        if (k != msg_start) & (k % INT_SIZE == 0) {
+            // If we consumed some input we can compare against the block.
+            let msg_block_index = (k - msg_start) / INT_SIZE - 1;
+            assert_eq(msg_block[msg_block_index] as Field, msg_item);
+
+            msg_item = 0;
+        }
+
+        // If we have input to consume, add it at the rightmost position.
+        let msg_byte = if k < max_read_index { msg[k] } else { 0 };
+        msg_item = msg_item * (TWO_POW_8 as Field) + msg_byte as Field;
+    }
 }
 
 // Encode `8 * message_size` into two `u32` limbs.
